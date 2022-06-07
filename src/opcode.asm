@@ -2,41 +2,6 @@ section .text
 
 public _executeThread
 
-extern _bytecodePtr
-extern _poly1Ptr
-extern _poly2
-
-extern _currentPalette
-extern _palettes
-
-extern _vmVar
-extern _reqThreadPC
-extern _reqThreadFlag
-
-extern _vbuffer1 
-extern _vbuffer2
-extern _vbuffer3
-
-extern _drawPolygon
-extern _polygonBase 
-
-extern _drawString
-extern _loadResource
-
-extern spiCmd
-extern spiParam
-
-extern polyHierarchy
-extern polyHierarchy.loop
-extern fill
-extern fill.yloop 
-extern fill.find0 
-
-extern drawColor
-extern drawColor.blitline
-extern drawMask
-extern drawCopy
-
 ;TODO: fix visual glitches(draw pixel not working correctly?)
 
 ; iy = pc 
@@ -977,4 +942,41 @@ opcodeTable:
 	emit 3: playSound 	; 0x18 
 	emit 3: loadFile
 	emit 3: playMusic ;0x1A
+	
+
+extern _bytecodePtr
+extern _poly1Ptr
+extern _poly2
+
+extern _currentPalette
+extern _palettes
+
+extern _vmVar
+extern _reqThreadPC
+extern _reqThreadFlag
+
+extern _vbuffer1 
+extern _vbuffer2
+extern _vbuffer3
+
+extern _drawPolygon
+extern _polygonBase 
+
+extern _drawString
+extern _loadResource
+
+extern spiCmd
+extern spiParam
+
+extern polyHierarchy
+extern polyHierarchy.loop
+extern fill
+extern fill.yloop 
+extern fill.find0 
+
+extern drawColor
+extern drawColor.blitline
+extern drawMask
+extern drawCopy
+
 
