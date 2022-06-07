@@ -35,8 +35,8 @@ vertStack:=$D052C0 	; end of pixelShadow
 edgeList:=$D03200  ; start of pixelShadow
 
 ;TODO: flat line special cases 
-;Figure out what's causing this nmi
-
+;TODO: fix visual glitches(draw pixel not working correctly?)
+;TODO: do start and end drawpixel calls
 
 ; (zoom) * a >> 8 
 mulZoom:  
@@ -105,7 +105,7 @@ _drawPolygon:
 	sbc hl,de
 	ld (y),l 
 	ld (y+1),h 
-	ld bc,200 
+	ld bc,199 
 	or a,a 
 	sbc hl,bc
 	bit 7,h
@@ -402,7 +402,7 @@ fill:
 	or a,a 
 	sbc.sis hl,de 
 	jp p,.noclip 
-	ld e,200
+	ld e,199
 .noclip: 
 	ld a,e 	; a = y1 
 .ycounter: 
@@ -546,7 +546,8 @@ drawColor:
 .clipend:	
 	ld a,(iy+2)
 	and a,(iy+5) 
-	jq m,.skipblit
+	rla 
+	jq c,.skipblit
 	ld hl,(iy+4) ; x end
 	bit 7,h 
 	jr nz,.skipblit

@@ -2,8 +2,6 @@ section .text
 
 public _executeThread
 
-;TODO: fix visual glitches(draw pixel not working correctly?)
-
 ; iy = pc 
 ; i = var array 
 ; sps = call stack 
@@ -717,7 +715,7 @@ setBuffer:
 fillBuffer: 
 	ld a,(iy+1) 
 	call getBuffer 
-	ld de,160*200; bottom of screen
+	ld de,160*199; bottom of screen
 	add hl,de
 	ld ix,0 
 	add ix,sp 
@@ -744,13 +742,13 @@ fillBuffer:
 	ex de,hl
 	ld b,92
 	call gfxFillScreenFastCode
-	; write 260 more bytes
+	; write 100 more bytes
 	or a,a 
 	sbc hl,hl 
 	add hl,sp
 	ex de,hl 
 	ld sp,ix 
-	ld bc,260
+	ld bc,100
 	push de 
 	pop hl 
 	dec de
@@ -873,13 +871,6 @@ blitBuffer:
 	ld hl,(_vbuffer2) 
 	ld (currentScreen),hl
 	call waitVComp
-	; unfreeze screen 
-	; ld a,$B0 
-	; call spiCmd 
-	; ld a,$11 
-	; call spiParam 
-	; ld a,$0F 
-	; call spiParam 
 .copyPalette: 
 	ld a,(_currentPalette)
 	ld d,a 
@@ -894,8 +885,6 @@ blitBuffer:
 	;wait [0xFF] frames 
 	ld a,(_vmVar + 255*3)
 	or a,a
-	jq z,.skipwait
-	dec a 
 	jq z,.skipwait
 	ld b,a 
 .waitloop: 
