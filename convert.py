@@ -182,7 +182,6 @@ for entry in mementry:
         flags = '-c zx7'
 
     subprocess.run(f'convbin -i {entryname}.bin {flags} -k 8xv -r -o {entryname}.8xv -n {entryname}', shell = True)
-    subprocess.run(f'del {entryname}.bin',shell = True) 
 
 
 print('Done!')
