@@ -14,6 +14,7 @@ lcdIcr:=$E30028
 lcdPalette:=$E30200
 gfxFillScreenFastCode:=$E30800	
 
+threadStack:=$0720	; end of textShadow
 polygonVars:=$E30A00
 
 
@@ -70,7 +71,7 @@ _executeThread:
 	add iy,de 
 	ld hl,_vmVar
 	ld i,hl 	; i = var pointer 
-	ld.sis sp,$0620 + 256	 ; end of textShadow
+	ld.sis sp,threadStack 	 
 fetchOpcode: 	; return point for opcodes
 	ld a,(iy+0) 
 	cp a,$20
