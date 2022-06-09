@@ -51,7 +51,7 @@ void getPlayerInput() {
 		{
 			ud = 1;
 			mask |= 4;
-		} else if (kb_IsDown(kb_Key2nd)||kb_IsDown(kb_KeyUp)) // 2nd = jump button
+		} else if (kb_IsDown(kb_KeyUp))
 		{
 			ud = 0xFFFF; 
 			mask |= 8;
@@ -83,12 +83,18 @@ void getPlayerInput() {
 
 int main(void)
 {
+	uint8_t textTimer = 10;
 	initVM(); 
-	
+	drawText(0); // test string
 	kb_SetMode(MODE_3_CONTINUOUS); 
 	kb_Scan(); 
 	
 	while(!kb_IsDown(kb_KeyClear)) { 
+		if (textTimer) { 
+			if(!(--textTimer)) 
+				clearText(); 
+		} 
+			
 	
 		if(kb_IsDown(kb_KeyZoom)) 
 			loadPart(9);
@@ -101,6 +107,7 @@ int main(void)
 			getCharAlpha(); 
 		
 		getPlayerInput(); 
+		
 		
 	} 	
 	

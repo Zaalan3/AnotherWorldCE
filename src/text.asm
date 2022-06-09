@@ -1,10 +1,52 @@
 section .text 
 
 public _drawString
+public _drawText 
+public _clearText
 
 extern _stringTable
 extern _font
 
+; draw string at top of every screen 
+_drawText: 
+	pop de 
+	pop hl 
+	push hl 
+	push de 
+	ld a,$FF 
+	ld de,$D40000
+	call _drawString
+	; copy to other buffers 
+.copy:
+	ld hl,$D40000 
+	ld de,$D40000 + 160*240 
+	ld bc,160*16 
+	ldir 
+	
+	ld hl,$D40000 
+	ld de,$D40000 + 160*240*2 
+	ld bc,160*16 
+	ldir 
+	
+	ld hl,$D40000 
+	ld de,$D40000 + 160*240*3 
+	ld bc,160*16 
+	ldir 
+	
+	ret 
+	
+_clearText: 
+	ld hl,$D40000 
+	xor a,a 
+	ld (hl),a 
+	push hl 
+	pop de 
+	inc de 
+	ld bc,160*16 
+	ldir 
+	jq _drawText.copy
+	ret 
+	
 ; hl = string entry 
 ; de = buffer pointer
 ; a = color
@@ -33,6 +75,9 @@ _drawString:
 	exx 
 	ld c,a 
 	exx
+	; c' = color mask 
+	; ix = string pointer 
+	; hl = buffer pointer
 .charloop: 
 	ld a,(ix+0) 
 	inc ix

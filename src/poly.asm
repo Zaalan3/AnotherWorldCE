@@ -455,7 +455,9 @@ drawPoint:
 	cp a,17
 	jq Z,pointcopy
 	
-	
+; a = color 
+; b = even(0)/odd(1)
+; hl = screen pointer
 pointcolor:
 	rr b 
 	jr nc,.even 
