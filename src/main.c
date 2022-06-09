@@ -83,7 +83,7 @@ void getPlayerInput() {
 
 int main(void)
 {
-	uint8_t textTimer = 10;
+	uint8_t textTimer = 30;
 	initVM(); 
 	drawText(0); // test string
 	kb_SetMode(MODE_3_CONTINUOUS); 
