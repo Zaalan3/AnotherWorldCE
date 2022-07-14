@@ -886,6 +886,8 @@ blitBuffer:
 	ld a,(_vmVar + 255*3)
 	or a,a
 	jq z,.skipwait
+	dec a 
+	jq z,.skipwait
 	ld b,a 
 .waitloop: 
 	call waitVComp

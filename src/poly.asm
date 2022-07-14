@@ -3,20 +3,13 @@ section .text
 public _drawPolygon 
 public _polygonBase 
 
-; debug labels
-public polyHierarchy
-public polyHierarchy.loop
-public fill
-public fill.yloop 
-public fill.find0
-public drawColor
-public drawColor.blitline
-public drawMask
-public drawCopy
+extern drawPoint 
+extern drawColor
+extern drawMask
+extern drawCopy
 
-extern _vbuffer1 
-extern _vbuffer2
-extern _vbuffer3
+public fill.yloopLeft
+public fill.yloopRight
 
 extern _recipTable
 
@@ -28,7 +21,7 @@ yend equ iy+7
 
 colorn equ iy+0+8
 xn equ iy+1+8
-yn equ iy+3+8 
+yn equ iy+3+8
 zoomn equ iy+5+8
 
 vertStack:=$D052C0 	; end of pixelShadow
@@ -37,6 +30,10 @@ edgeList:=$D03200  ; start of pixelShadow
 ;TODO: flat line special cases 
 ;TODO: fix visual glitches(draw pixel not working correctly?)
 ;TODO: do start and end drawpixel calls
+
+_polygonBase: 
+	emit 3: 0 	
+
 
 ; (zoom) * a >> 8 
 mulZoom:  
@@ -67,14 +64,14 @@ _drawPolygon:
 	ld hl,(ix+1)  ; if bbw = 0,bbh = 1, and #verts = 4
 	ld de,$040100 ; draw a point
 	or a,a 
-	sbc hl,de 
-	jq Z,drawPoint
+	sbc hl,de
+	jp Z,drawPoint
 .copyVerts: 
 	add hl,de 
 	ld a,h	  
 	ex af,af' 
 	ld a,l 	; a = bounding box x
-	call mulZoom 
+	call mulZoom  
 	srl h 
 	rr l	; x -= (bbw*zoom)/2 
 	ex de,hl
@@ -150,8 +147,9 @@ _drawPolygon:
 	ld sp,hl	; restore sp 
 	exx 
 	
+	; left edge buffer
 	xor a,a 
-	ld (SMCedge),a 
+	ld (fill.SMCedge),a 
 	ld a,(ix+3) ; for each edge count = (numVerts/2) - 1 
 	or a,a 
 	rra 
@@ -161,12 +159,12 @@ _drawPolygon:
 	pop af
 	push hl 
 	pop ix ; ix = vert pointer 
-	call fill  ; fill edge buffer 
+	call fill  ; fill left edge buffer 
 	lea ix,ix+6
-	ld a,3
-	ld (SMCedge),a
+	ld a,1
+	ld (fill.SMCedge),a
 	ex af,af'
-	call fill
+	call fill	; fill right edge buffer 
 .draw: 
 	ld de,(yend) 
 	ld hl,199 
@@ -413,14 +411,19 @@ fill:
 	mlt bc 
 	ld iy,edgeList ; iy = edge pointer 
 	add iy,bc
+	ld bc,319	; for clipping later
 	exx 
 	ld b,a
-.yloop: 
+	ld a,0 
+.SMCedge:=$-1 
+	or a,a
+	jr nz,.yloopRight
+	; edge fill left 
+.yloopLeft: 
 	ld (iy+0),hl
-SMCedge:=$-1
 	lea iy,iy+6
 	add hl,de
-	djnz .yloop 
+	djnz .yloopLeft
 .next:
 	lea ix,ix+6 
 	pop af 
@@ -428,341 +431,71 @@ SMCedge:=$-1
 	jq nz,.start
 	pop iy
 	ret 
-	
 
-	
-; ----------------------------------------------
-
-drawPoint:
-	ld hl,(x) ; get pixel address
+	; edge fill right + clipping 
+.yloopRight:
+	push hl 
+	add hl,de
+	exx 
+	inc sp 
+	pop hl  ; hl = right edge
+	dec sp 
+	ld de,(iy+1) ; de = left edge 
+	or a,a 
+	sbc.sis hl,de 
+	add hl,de 
+	jp p,.clipright ; swap if left>right 
+	ex de,hl 
+.clipright: 
 	bit 7,h 
-	ret nz
-	srl h 
-	rr l 
-	rl b
-	ld d,(y) 
-	bit 7,d 
-	ret nz 
-	ld e,160	
-	mlt de
-	add.sis hl,de 
-	ex de,hl
-	ld a,(color)
-	ld hl,(_vbuffer1) 
-	add hl,de
-	cp a,16 
-	jq Z,pointblend 
-	cp a,17
-	jq Z,pointcopy
-	
-; a = color 
-; b = even(0)/odd(1)
-; hl = screen pointer
-pointcolor:
-	rr b 
-	jr nc,.even 
-.odd: 
-	ld b,a 
-	ld a,(hl) 
-	and a,$F0 
-	or a,b 
-	ld (hl),a 
-	ret 
-.even: 
-	rlca 
-	rlca 
-	rlca 
-	rlca 
-	ld b,a 
-	ld a,(hl) 
-	and a,$0F 
-	or a,b 
-	ld (hl),a 
-	ret 
-
-pointblend:
-	rr b 
-	jr nc,.even 
-.odd: 
-	ld a,(hl)
-	or a,00001000b 
-	ld (hl),a 
-	ret 
-.even: 
-	ld a,(hl) 
-	or a,10000000b
-	ld (hl),a 
-	ret 
-	
-pointcopy:
-	rr b 
-	jr nc,.even 
-.odd: 
-	ex de,hl 
-	ld bc,$D40000 + 160*20
-	add hl,de
-	ld a,(hl)
-	and a,$0F
-	ld h,a 
-	ld a,(de) 
-	and a,$F0 
-	or a,h 
-	ld (de),a 
-	ret 
-.even: 
-	ex de,hl 
-	ld bc,$D40000 + 160*20
-	add hl,de
-	ld a,(hl)
-	and a,$F0
-	ld h,a 
-	ld a,(de) 
-	and a,$0F 
-	or a,h 
-	ld (de),a 
-	ret 
-
-
-; a = color 
-; e = y start 
-; b = y length 
-; iy = scan edges  
-drawColor:
-	ld ix,(_vbuffer1) ; ix screen offset
-	ld d,160 	
-	mlt de 
-	add ix,de 
-	ld de,160
-	exx 
-	ld bc,0
-	ld l,a ; get color mask
-	rlca 
-	rlca 
-	rlca 
-	rlca 
-	or a,l
-	ld i,a
-	exx 
-.loop: 
-	exx
-.clipend:	
-	ld a,(iy+2)
-	and a,(iy+5) 
+	jq nz,.offscreen ; if right<0  
+	or a,a 
+	sbc.sis hl,bc 
+	jr c,.clipleft ; if right>=319, right=319 
+	or a,a 
+	sbc hl,hl
+.clipleft: 	
+	add hl,bc 
+	ex de,hl ; hl = left , de = right
+	bit 7,h  ; if left < 0 , left = 0 
+	jr z,.clipoob
+	or a,a 
+	sbc hl,hl 
+	jr .shr 
+.clipoob:
+	or a,a 
+	sbc.sis hl,bc
+	jq nc,.offscreen ; if left>= 320  
+	add hl,bc 
+.shr: 
+	; shr 1 each edge 
+	; a[0] = bottom bit of left , a[1] = bottom bit of right ( used for 4bpp line alignment )
+	; iy+3 = left 
+	; iy+4 = right 
+	; iy+5 = bottom bits 
+	xor a,a 
+	srl d
+	rr e
 	rla 
-	jq c,.skipblit
-	ld hl,(iy+4) ; x end
-	bit 7,h 
-	jr nz,.skipblit
-	ld de,319
-	sbc.sis hl,de 
-	jp m,.clipstart
-	or a,a 
-	sbc hl,hl
-	ex de,hl 
-.clipstart: 
-	add hl,de
-	srl h
+	srl h 
 	rr l
-.testlt: 
-	ld de,(iy+1) ; x start 
-	bit 7,d
-	jr Z,.blitline 
-	ld de,0  
-.blitline:
-	srl d 
-	rr e
-	or a,a 
-	sbc.sis hl,de
-	ld a,l
-	jq Z,.point
-	jq p,.noswap
-	add hl,de
-	ex de,hl
-	neg 
-.noswap: 
-	ld c,a
-	add a,e
-	cp a,160  
-	jr c,.getoffset
-	ld a,159 
-	sub a,e 
-	jq Z,.point
-	ld c,a 
-.getoffset:
-	ex.sis de,hl
-	
-	lea de,ix+0 ; get first pixel  
-	add hl,de 
-	push hl 
-	pop de 
-	inc de 
-	ld a,i
-	ld (hl),a 
-	ldir
-.skipblit:
-	lea iy,iy+6
+	rla 
+	ld h,e 
+	ld (iy+3),hl 
+	ld (iy+5),a 
+.endloop:	
 	exx 
-	add ix,de
-	djnz .loop 
+	lea iy,iy+6 
+	djnz .yloopRight
+	
+	lea ix,ix+6 
+	pop af 
+	dec a
+	jq nz,.start
+	pop iy
 	ret 
-.point:
-	ex.sis hl,de
-	lea de,ix+0 ; get first pixel  
-	add hl,de
-	ld a,i
-	ld (hl),a 
-	jr .skipblit
 	
-	
-
-drawMask:
-	ld ix,(_vbuffer1) ; ix screen offset
-	ld d,160 	
-	mlt de 
-	add ix,de 
-	ld de,160
-	exx 
-	ld bc,10001000b
-	exx 
-.loop:
-	exx
-.clipend:	
-	ld hl,(iy+4) ; x end
-	bit 7,h 
-	jr nz,.skipblit
-	ld de,319
-	sbc.sis hl,de 
-	jp m,.clipstart
-	or a,a 
-	sbc hl,hl
-	ex de,hl 
-.clipstart: 
-	add hl,de
-	srl h
-	rr l
-	ld de,(iy+1) ; x start 
-	bit 7,d
-	jr Z,.blitline 
-	ld de,0  
-.blitline:
-	srl d 
-	rr e
-	or a,a 
-	sbc.sis hl,de
-	ld a,l 
-	jq Z,.point
-	jq p,.noswap
-	add hl,de
-	ex de,hl
-	neg 
-.noswap: 
-	ld b,a 
-	ex.sis hl,de
-	lea de,ix+0 ; get first pixel  
-	add hl,de 
-	ld a,(hl) 
-	or a,c
-	ld (hl),a 
-	inc hl
-.bloop: 
-	ld a,(hl) 
-	or a,c
-	ld (hl),a 
-	inc hl
-	djnz .bloop 
-.skipblit:
-	lea iy,iy+6
-	exx 
-	add ix,de
-	djnz .loop 
-	ret 
-.point: 
-	ex.sis hl,de
-	lea hl,ix+0 ; get first pixel  
-	add hl,de
-	ld a,(hl) 
-	or a,c
-	ld (hl),a 
-	jr .skipblit
-	
-	
-drawCopy:
-	ld ix,0 ; ix screen offset
-	ld d,160 	
-	mlt de 
-	add ix,de 
-	ld de,160
-	exx 
-	ld bc,0
-	exx 
-.loop:
-	exx
-.clipend:	
-	ld hl,(iy+4) ; x end
-	bit 7,h 
-	jr nz,.skipblit
-	ld de,319
-	sbc.sis hl,de 
-	jp m,.clipstart
-	or a,a 
-	sbc hl,hl
-	ex de,hl 
-.clipstart: 
-	add hl,de
-	srl h
-	rr l
-	ld de,(iy+1) ; x start 
-	bit 7,d
-	jr Z,.blitline 
-	ld de,0  
-.blitline:
-	srl d 
-	rr e
-	or a,a 
-	sbc.sis hl,de
-	ld a,l 
-	jq Z,.point
-	jq p,.noswap
-	add hl,de
-	ex de,hl
-	neg 
-.noswap: 
-	ld c,a 
-	ex.sis hl,de
-	lea de,ix+0 ; get first pixel  
-	add hl,de 
-	ex de,hl 
-	ld hl,(_vbuffer1) 
-	add hl,de 
-	push hl 
-	ld hl,$D40000 + 160*20 
-	add hl,de 
-	pop de 
-.bloop: 
-	ldir
-.skipblit:
-	lea iy,iy+6
-	exx 
-	add ix,de
-	djnz .loop 
-	ret 
-.point: 
-	ex.sis hl,de
-	lea hl,ix+0 ; get first pixel  
-	add hl,de 
-	ex de,hl 
-	ld hl,(_vbuffer1) 
-	add hl,de
-	add hl,de 
-	ld a,(hl) 
-	ld hl,$D40000 + 160*20
-	add hl,de 
-	ld (hl),a 
-	jr .skipblit 
-	
-_polygonBase: 
-	emit 3: 0 	
-
-
-	
+.offscreen: 
+	ld (iy+3),255 ; left = 255 -> line is offscreen
+	jr .endloop 
 	

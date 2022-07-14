@@ -83,9 +83,9 @@ void getPlayerInput() {
 
 int main(void)
 {
-	uint8_t textTimer = 30;
+	uint8_t textTimer = 60;
 	initVM(); 
-	drawText(0); // test string
+	drawText(0); // test string / intro primer. 
 	kb_SetMode(MODE_3_CONTINUOUS); 
 	kb_Scan(); 
 	
