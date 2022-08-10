@@ -108,7 +108,9 @@ void initVM() {
 	// decompress file into ram buffer 
 	zx7_Decompress(poly2,getFileDataPtr(0x11)); 
 	
-	vmVar[0x3C] = 0;
+	srandom(rtc_Time()); 
+	
+	vmVar[0x3C] = random();
 	vmVar[0x54] = 0x81; 
 	
 	vmVar[0xBC] = 0x10;

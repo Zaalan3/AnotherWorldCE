@@ -17,7 +17,10 @@ color equ iy+0
 x equ iy+1 
 y equ iy+3 
 zoom equ iy+5
+
 yend equ iy+7 
+bbw equ iy+10 
+bbh equ iy+11 
 
 colorn equ iy+0+8
 xn equ iy+1+8
@@ -72,6 +75,7 @@ _drawPolygon:
 	ex af,af' 
 	ld a,l 	; a = bounding box x
 	call mulZoom  
+	ld (bbw),l 
 	srl h 
 	rr l	; x -= (bbw*zoom)/2 
 	ex de,hl
@@ -94,6 +98,7 @@ _drawPolygon:
 
 	ex af,af' ; a = bounding box y 
 	call mulZoom 
+	ld (bbh),l 
 	srl h 
 	rr l 	
 	ex de,hl  
@@ -114,10 +119,19 @@ _drawPolygon:
 	bit 7,h 
 	ret nz 
 	
+	ld a,(ix+3) ; a = num verts 
+	cp a,4 
+	jr nz,.storesp 
+	ld hl,(bbw) 
+	ld de,$0100 
+	or a,a 
+	sbc hl,de 
+	jp z,drawPoint
+.storesp: 
 	or a,a 	; store sp 
 	sbc hl,hl 
-	add hl,sp 
-	ld b,(ix+3) ; a = num verts 
+	add hl,sp 	
+	ld b,a 
 	exx 
 	ld sp,vertStack  
 	lea bc,ix+4 ; start of verts
@@ -167,15 +181,15 @@ _drawPolygon:
 	call fill	; fill right edge buffer 
 .draw: 
 	ld de,(yend) 
-	ld hl,199 
+	ld hl,198 
 	or a,a 
 	sbc hl,de 
 	bit 7,h 
 	jr Z,.skipyendclip 
-	ld e,199 
+	ld e,198 
 .skipyendclip: 
 	ld a,e 
-	ld hl,199
+	ld hl,198
 	ld de,(y)
 	or a,a 
 	sbc hl,de 
@@ -187,7 +201,6 @@ _drawPolygon:
 .skipyclip:
 	sub a,e 
 	ret c
-	jr nz,$+3
 	inc a 
 	ld b,a
 	ld a,(color)
@@ -200,7 +213,8 @@ _drawPolygon:
 	cp a,16
 	jp Z,drawMask
 	cp a,17
-	jp nc,drawCopy
+	jp Z,drawCopy
+	ret nc
 	jp drawColor 
 	
 	
@@ -396,7 +410,7 @@ fill:
 	ld de,(y1)	; go to next if y1 < 0
 	bit 7,d 
 	jr nz,.next
-	ld hl,200  
+	ld hl,199  
 	or a,a 
 	sbc.sis hl,de 
 	jp p,.noclip 
@@ -434,12 +448,12 @@ fill:
 
 	; edge fill right + clipping 
 .yloopRight:
+	dec sp 
 	push hl 
 	add hl,de
 	exx 
-	inc sp 
+	inc sp
 	pop hl  ; hl = right edge
-	dec sp 
 	ld de,(iy+1) ; de = left edge 
 	or a,a 
 	sbc.sis hl,de 
@@ -452,7 +466,6 @@ fill:
 	or a,a 
 	sbc.sis hl,bc 
 	jr c,.clipleft ; if right>=319, right=319 
-	or a,a 
 	sbc hl,hl
 .clipleft: 	
 	add hl,bc 

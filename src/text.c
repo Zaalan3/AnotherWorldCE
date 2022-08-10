@@ -85,7 +85,7 @@ const struct StringEntry stringTable[] =
 	{ 0x13A, "E" },
 	{ 0x13B, "F" },
 	{ 0x13C, "        ACCESS CODE:" },
-	{ 0x13D, "       PRESS 2nd TO CONTINUE" },
+	{ 0x13D, "     PRESS Alpha TO CONTINUE" },
 	{ 0x13E, "   ENTER ACCESS CODE" },
 	{ 0x13F, "   INVALID PASSWORD !" },
 	{ 0x140, "ANNULER" },

@@ -32,7 +32,7 @@ drawPoint:
 	ld a,(y) 
 	bit 7,a  
 	ret nz 	
-	cp a,200
+	cp a,199
 	ret nc 
 	ld d,a
 	mlt de
@@ -166,6 +166,7 @@ drawColor:
 	ld a,i
 	ld (hl),a 
 	jr .skipblit
+	
 	
 	
 ;---------------------------------------------

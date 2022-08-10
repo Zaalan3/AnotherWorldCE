@@ -589,7 +589,7 @@ breakThread:
 	pop ix
 	ret 
 
-; sets thread to inactive ( PC = $FFFF ) 
+; sets thread to inactive ( PC = $FFFFFF ) 
 killThread: 
 	scf 
 	sbc hl,hl 
@@ -785,7 +785,7 @@ copyBuffer:
 	jq nz,.return
 	or a,a 
 	sbc hl,bc 
-	ld hl,200
+	ld hl,199
 	bit 7,b ; if scroll<0
 	jr nz,.scrollneg
 .scrollpos:	; dst += 160*scroll , len = 160*(200-scroll)
@@ -826,7 +826,7 @@ copyBuffer:
 	ex de,hl
 	call getBuffer
 	ex de,hl 
-	ld bc,160*200
+	ld bc,160*199
 .copy: 
 	ldir
 .cret:
