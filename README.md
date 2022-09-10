@@ -8,4 +8,4 @@ This project was compiled with [v10.1 of the CE Toolchain](https://github.com/CE
 
 To convert the appvars needed to run this project, navigate to the directory for your copy of the DOS version of Another World/Out of This World, and run *convert.py* there. This Python script requires Python 3.x and that the CE Toolchain has been installed.
 
-![][intro.png "Intro cinematic"]
+![][https://github.com/Zaalan3/AnotherWorldCE/blob/main/intro.png "Intro cinematic"]
