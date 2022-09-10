@@ -7,7 +7,7 @@ ICON = icon.png
 DESCRIPTION = "Another World Interpreter."
 COMPRESSED = NO
 ARCHIVED = NO
-LTO = NO
+LTO = YES
 
 CFLAGS = -Wall -Wextra -Oz
 CXXFLAGS = -Wall -Wextra -Oz

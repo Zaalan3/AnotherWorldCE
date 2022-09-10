@@ -53,13 +53,6 @@ pointcolor:
 	rr b 
 	jr nc,.even 
 .odd: 
-	ld c,a 
-	ld a,(hl) 
-	and a,$F0 
-	or a,c 
-	ld (hl),a 
-	ret 
-.even: 
 	rlca 
 	rlca 
 	rlca 
@@ -67,6 +60,13 @@ pointcolor:
 	ld c,a 
 	ld a,(hl) 
 	and a,$0F 
+	or a,c 
+	ld (hl),a 
+	ret 
+.even: 
+	ld c,a 
+	ld a,(hl) 
+	and a,$F0
 	or a,c 
 	ld (hl),a 
 	ret 
@@ -75,14 +75,10 @@ pointblend:
 	rr b 
 	jr nc,.even 
 .odd: 
-	ld a,(hl)
-	or a,00001000b 
-	ld (hl),a 
+	set 7,(hl) 
 	ret 
 .even: 
-	ld a,(hl) 
-	or a,10000000b
-	ld (hl),a 
+	set 3,(hl)
 	ret 
 	
 pointcopy:
@@ -90,25 +86,23 @@ pointcopy:
 	jr nc,.even 
 .odd: 
 	ex de,hl 
-	ld bc,$D40000 + 160*20
-	add hl,de
-	ld a,(hl)
-	and a,$0F
-	ld h,a 
-	ld a,(de) 
-	and a,$F0 
-	or a,h 
-	ld (de),a 
-	ret 
-.even: 
-	ex de,hl 
-	ld bc,$D40000 + 160*20
 	add hl,de
 	ld a,(hl)
 	and a,$F0
 	ld h,a 
 	ld a,(de) 
 	and a,$0F 
+	or a,h 
+	ld (de),a 
+	ret 
+.even: 
+	ex de,hl 
+	add hl,de
+	ld a,(hl)
+	and a,$0F
+	ld h,a 
+	ld a,(de) 
+	and a,$F0 
 	or a,h 
 	ld (de),a 
 	ret 
@@ -142,27 +136,93 @@ drawColor:
 	or a,a 
 	sbc hl,hl 
 	ld l,a 
+	ex af,af' 
 	ld a,(iy+4) ; right edge 
 	sub a,l 
 	jr z,.point 
-	ld c,a
+	ld c,a ; c = count for ldir 
+	
 	lea de,ix+0 ; get first pixel  
 	add hl,de 
+	ld b,(iy+5) ; b = lsb's 
+	srl b	; draw leftmost pixel if odd(doesnt overlap with ldir) 
+	jr nc,.skipleft 
+	ld a,i 
+	and a,$F0 
+	ld e,a 
+	ld a,(hl) 
+	and a,$0F 
+	or a,e 
+	ld (hl),a
+	ld e,ixl 
+	dec c
+.skipleft: 
+	or a,a 
+	sbc hl,hl 
+	ld l,(iy+4)
+	add hl,de  ; get last pixel 
+	srl b ; draw rightmost pixel if even 
+	jr c,.skipright 
+	ld a,i 
+	and a,$0F 
+	ld e,a 
+	ld a,(hl) 
+	and a,$F0  
+	or a,e 
+	ld (hl),a
+	dec hl
+	dec c
+	jr z,.pointw
+	ld a,159  
+	cp a,c 
+	jr c,.skipblit
+.skipright: 
 	push hl 
 	pop de 
-	inc de 
+	dec de 
 	ld a,i
 	ld (hl),a 
-	ldir
+	ld a,c 
+	or a,a 
+	jr z,.skipblit
+	lddr
+	
 .skipblit:
 	lea iy,iy+6
 	exx 
 	add ix,de
 	djnz .loop 
 	ret 
+	
 .point:
 	lea de,ix+0 ; get first pixel  
 	add hl,de
+	ld a,(iy+5)
+	ld c,a 
+	srl c 
+	and a,1
+	xor a,c 
+	jr nz,.pointw 
+	ld a,i 
+	rr c 
+	jr nc,.even 
+.odd:
+	and a,$F0
+	ld e,a 
+	ld a,(hl) 
+	and a,$0F   
+	or a,e 
+	ld (hl),a
+	jr .skipblit 
+.even: 
+	and a,$0F
+	ld e,a 
+	ld a,(hl) 
+	and a,$F0  
+	or a,e 
+	ld (hl),a
+	jr .skipblit
+.pointw: 
 	ld a,i
 	ld (hl),a 
 	jr .skipblit

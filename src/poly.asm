@@ -27,7 +27,7 @@ xn equ iy+1+8
 yn equ iy+3+8
 zoomn equ iy+5+8
 
-vertStack:=$D052C0 	; end of pixelShadow
+vertStack:=$E30B80 	; end of cursor image
 edgeList:=$D03200  ; start of pixelShadow
 
 ;TODO: flat line special cases 
@@ -222,8 +222,8 @@ _drawPolygon:
 ; mesh type data structure. child poly's can be other hierarchies
 polyHierarchy: 
 	and a,$3F 
-	cp a,2 
-	ret nz
+;	cp a,2 
+;	ret nz
 	ld a,(ix+1) ; x -= bbw*zoom
 	call mulZoom 
 	ex de,hl 
@@ -485,7 +485,7 @@ fill:
 	; a[0] = bottom bit of left , a[1] = bottom bit of right ( used for 4bpp line alignment )
 	; iy+3 = left 
 	; iy+4 = right 
-	; iy+5 = bottom bits 
+	; iy+5 = bit 0: left lsb bit 1: right lsb   
 	xor a,a 
 	srl d
 	rr e
