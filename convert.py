@@ -117,22 +117,22 @@ def interleavePlanes(buffer):
         for j in range(0,4):
             color = 0
             #top nibble
-            if c0 & 0x80:
+            if c0 & 0x40:
                 color |= 1<<4
-            if c1 & 0x80:
+            if c1 & 0x40:
                 color |= 1<<5
-            if c2 & 0x80:
+            if c2 & 0x40:
                 color |= 1<<6
-            if c3 & 0x80:
+            if c3 & 0x40:
                 color |= 1<<7
             #bottom nibble
-            if c0 & 0x40:
+            if c0 & 0x80:
                 color |= 1
-            if c1 & 0x40:
+            if c1 & 0x80:
                 color |= 1<<1
-            if c2 & 0x40:
+            if c2 & 0x80:
                 color |= 1<<2
-            if c3 & 0x40:
+            if c3 & 0x80:
                 color |= 1<<3
 
             merged.append(color)
