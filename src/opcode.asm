@@ -10,6 +10,8 @@ currentScreen:=$E30010
 lcdRis:=$E30020 
 lcdIcr:=$E30028
 lcdPalette:=$E30200
+timer1Counter:=$F20000
+timerControl:=$F20030
 gfxFillScreenFastCode:=$E30800	
 
 threadStack:=$0720	; end of textShadow
@@ -868,9 +870,10 @@ blitBuffer:
 	add hl,bc
 	ld (_vbuffer2),hl
 .setScreen: 
+	call waitTimer
+	call waitVComp
 	ld hl,(_vbuffer2) 
 	ld (currentScreen),hl
-	call waitVComp
 .copyPalette: 
 	ld a,(_currentPalette)
 	ld d,a 
@@ -884,14 +887,16 @@ blitBuffer:
 	
 	;wait [0xFF] frames 
 	ld a,(_vmVar + 255*3)
-	or a,a
-	jq z,.skipwait
-	dec a 
-	jq z,.skipwait
-	ld b,a 
-.waitloop: 
-	call waitVComp
-	djnz .waitloop
+	ld h,a ; timer counter = 136*4*([0xFF])
+	ld l,136 
+	mlt hl 
+	add hl,hl
+	add hl,hl
+	ex de,hl 
+	ld hl,timerControl
+	res 0,(hl) 
+	ld (timer1Counter),de
+	set 0,(hl)
 .skipwait: 
 	lea iy,iy+2 
 	jp fetchOpcode
@@ -903,6 +908,16 @@ waitVComp:
 	ld a,(lcdRis)
 	bit 3,a 
 	jr Z,.loop 
+	ret 
+	
+waitTimer:
+	or a,a 
+	sbc hl,hl 
+	ex de,hl 
+.loop: 
+	ld hl,(timer1Counter)
+	sbc hl,de 
+	jr nz,.loop
 	ret 
 	
 	

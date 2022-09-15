@@ -125,7 +125,7 @@ _drawPolygon:
 	ld hl,(bbw) 
 	ld de,$0100 
 	or a,a 
-	sbc hl,de 
+	sbc.sis hl,de 
 	jp z,drawPoint
 .storesp: 
 	or a,a 	; store sp 

@@ -95,6 +95,10 @@ void initVM() {
 	gfx_ZeroScreen();
 	initAsm(); // init 4bpp and SPI
 	
+	timer_Disable(1);
+	timer_Set(1,0);
+	timer_Enable(1,TIMER_32K,TIMER_NOINT,TIMER_DOWN); 
+	
 	vbuffer1 = ((uint8_t*)(0xD40000 + 160*240*2 + 160*20));
 	vbuffer2 = ((uint8_t*)(0xD40000 + 160*240*2));
 	vbuffer3 = ((uint8_t*)(0xD40000 + 160*240*1));
