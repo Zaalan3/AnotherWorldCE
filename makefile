@@ -2,7 +2,7 @@
 # Makefile Options
 # ----------------------------
 
-NAME = DEMO
+NAME = ANOTHERW
 ICON = icon.png
 DESCRIPTION = "Another World Interpreter."
 COMPRESSED = NO
