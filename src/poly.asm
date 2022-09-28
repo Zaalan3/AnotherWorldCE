@@ -12,6 +12,8 @@ public fill.yloopRight
 
 extern _recipTable
 
+extern _edgeList
+
 color equ iy+0 
 x equ iy+1 
 y equ iy+3 
@@ -27,7 +29,6 @@ yn equ iy+3+8
 zoomn equ iy+5+8
 
 vertStack:=$E30B80 	; end of cursor image
-edgeList:=$D03200  ; start of pixelShadow
 
 ; (zoom) * a >> 8 
 mulZoom:  
@@ -195,7 +196,7 @@ _drawPolygon:
 	inc a 
 	ld b,a
 	ld a,(color)
-	ld iy,edgeList
+	ld iy,_edgeList
 	ld c,e
 	ld d,6 
 	mlt de 
@@ -414,7 +415,7 @@ fill:
 .getEdge: 
 	ld b,6
 	mlt bc 
-	ld iy,edgeList ; iy = edge pointer 
+	ld iy,_edgeList ; iy = edge pointer 
 	add iy,bc
 	ld bc,319	; for clipping later
 	exx 

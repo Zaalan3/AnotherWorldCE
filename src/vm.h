@@ -9,6 +9,7 @@
 #define SIZEPAL 2048 
 
 extern uint16_t recipTable[1024]; 
+extern uint8_t edgeList[1440];
 
 extern uint8_t* bytecodePtr; 
 extern uint8_t* poly1Ptr; 
