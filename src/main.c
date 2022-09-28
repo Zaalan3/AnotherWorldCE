@@ -51,11 +51,11 @@ void getPlayerInput() {
 		{
 			ud = 1;
 			mask |= 4;
-		} else if (kb_IsDown(kb_KeyUp))
+		} else if (kb_IsDown(kb_KeyUp) || ((currentPart!=9)&&kb_IsDown(kb_Key2nd)))
 		{
 			ud = 0xFFFF; 
 			mask |= 8;
-		}
+		} 
 		
 		
 		vmVar[0xE5] = ud;
@@ -69,12 +69,6 @@ void getPlayerInput() {
 			mask |= 0x80; 
 		}
 		
-		if (currentPart!=9) { 	// binds action to Z on computers for easier testing on CEmu
-			if (kb_IsDown(kb_Key2)) { 
-				action = 1; 
-				mask |= 0x80; 
-			}
-		} 
 		
 		vmVar[0xFA] = action; 
 		vmVar[0xFE] = mask; 
@@ -89,7 +83,7 @@ int main(void)
 	kb_SetMode(MODE_3_CONTINUOUS); 
 	kb_Scan(); 
 	
-	while(!kb_IsDown(kb_KeyClear)) { 
+	while(!kb_IsDown(kb_KeyDel)) { 
 		if (textTimer) { 
 			if(!(--textTimer)) 
 				clearText(); 
