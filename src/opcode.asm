@@ -976,9 +976,6 @@ extern _polygonBase
 extern _drawString
 extern _loadResource
 
-extern spiCmd
-extern spiParam
-
 extern polyHierarchy
 extern polyHierarchy.loop
 extern fill

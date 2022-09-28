@@ -2,8 +2,6 @@ section .text
 
 public _initAsm 
 public _cleanupAsm
-public spiCmd 
-public spiParam 
 
 extern _palettes
 lcdControl:=$E30018
