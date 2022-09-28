@@ -1,6 +1,7 @@
 section .text
 
 public _executeThread
+public blitBuffer
 
 ; iy = pc 
 ; i = var array 
@@ -10,7 +11,9 @@ currentScreen:=$E30010
 lcdRis:=$E30020 
 lcdIcr:=$E30028
 lcdPalette:=$E30200
+
 timer1Counter:=$F20000
+timer1Reload:=$F20004 
 timerControl:=$F20030
 gfxFillScreenFastCode:=$E30800	
 
@@ -214,7 +217,7 @@ opcode40:
 	jq nc,.testop6
 	rla 
 	jq nc,.testend 
-	ld de,_poly2
+	ld de,(_poly2Ptr)
 	jq .zoomdefault 
 .testop6: 
 	rla 
@@ -887,16 +890,17 @@ blitBuffer:
 	
 	;wait [0xFF] frames 
 	ld a,(_vmVar + 255*3)
-	ld h,a ; timer counter = 136*4*([0xFF])
-	ld l,136 
+	ld h,a ; timer counter = 163*4*([0xFF])
+	ld l,163 
 	mlt hl 
 	add hl,hl
 	add hl,hl
 	ex de,hl 
 	ld hl,timerControl
-	res 0,(hl) 
+	res 0,(hl)
 	ld (timer1Counter),de
-	set 0,(hl)
+	set 0,(hl) 
+	
 .skipwait: 
 	lea iy,iy+2 
 	jp fetchOpcode
@@ -953,7 +957,7 @@ opcodeTable:
 
 extern _bytecodePtr
 extern _poly1Ptr
-extern _poly2
+extern _poly2Ptr
 
 extern _currentPalette
 extern _palettes
