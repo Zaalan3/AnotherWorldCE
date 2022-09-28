@@ -1,5 +1,5 @@
 import subprocess
-import json
+import os
 
 # read memlist and get nonaudio related files
 memlist = open('memlist.bin','rb')
@@ -141,8 +141,18 @@ def interleavePlanes(buffer):
             c1 <<= 2
             c2 <<= 2
             c3 <<= 2
-
     return merged
+
+#adjust palette to rgb555 format 
+def adjustPalettes(buffer):
+    for i in range(0,2047,2):
+        r = (buffer[i+1]&0x0F)<<1
+        g = (buffer[i+1]&0xF0)>>3
+        b = (buffer[i]&0x0F)<<1
+        
+        buffer[i] = (g<<5)&0b11100000 + r
+        buffer[i+1] = (b<<2) + (g>>3)
+    return buffer 
 
 #iterate through list of entries and decompress and save to individual files
 for entry in mementry:
@@ -171,15 +181,17 @@ for entry in mementry:
 
     if entry['type'] == 2:
         buffer = interleavePlanes(buffer)
-
+    elif entry['type'] == 3:
+        buffer = adjustPalettes(buffer)
+        
     print(f'Size: {len(buffer)}')
 
     entryname = f'AW{index:X}'
-    entryfile = open(entryname + '.bin','wb')
-    entryfile.write(buffer)
-    entryfile.close()
-    if (entry['type'] == 2 or entry['type'] == 3 or entry['type'] == 6):
-        flags = '-c zx7'
+    with open(entryname + '.bin','wb') as f: 
+        f.write(buffer)
+
+    if (entry['type'] == 2 or entry['type'] == 3):
+        flags = '-c zx0'
 
     subprocess.run(f'convbin -i {entryname}.bin {flags} -k 8xv -r -o {entryname}.8xv -n {entryname}', shell = True)
 

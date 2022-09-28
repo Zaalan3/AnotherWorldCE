@@ -12,7 +12,7 @@ extern uint16_t recipTable[1024];
 
 extern uint8_t* bytecodePtr; 
 extern uint8_t* poly1Ptr; 
-extern uint8_t poly2[SIZEPOLY2]; 
+extern uint8_t* poly2Ptr; 
 
 extern uint8_t currentPalette;
 extern uint8_t palettes[SIZEPAL];

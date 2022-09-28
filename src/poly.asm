@@ -1,7 +1,6 @@
 section .text 
 
-public _drawPolygon 
-public _polygonBase 
+public _drawPolygon
 
 extern drawPoint 
 extern drawColor
@@ -29,14 +28,6 @@ zoomn equ iy+5+8
 
 vertStack:=$E30B80 	; end of cursor image
 edgeList:=$D03200  ; start of pixelShadow
-
-;TODO: flat line special cases 
-;TODO: fix visual glitches(draw pixel not working correctly?)
-;TODO: do start and end drawpixel calls
-
-_polygonBase: 
-	emit 3: 0 	
-
 
 ; (zoom) * a >> 8 
 mulZoom:  
@@ -512,3 +503,10 @@ fill:
 	ld (iy+3),255 ; left = 255 -> line is offscreen
 	jr .endloop 
 	
+	
+section .data 
+
+public _polygonBase 
+
+_polygonBase: 
+	emit 3: 0 	

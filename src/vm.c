@@ -19,7 +19,7 @@ uint16_t recipTable[1024];
 
 uint8_t* bytecodePtr; 
 uint8_t* poly1Ptr; 
-uint8_t poly2[SIZEPOLY2]; 
+uint8_t* poly2Ptr; 
 
 uint8_t currentPalette;
 uint8_t palettes[SIZEPAL];
@@ -93,9 +93,10 @@ void initVM() {
 	gfx_ZeroScreen(); // loads fast clear to cursorImage(0xE30800) 
 	gfx_SwapDraw(); 
 	gfx_ZeroScreen();
-	initAsm(); // init 4bpp and SPI
+	initAsm(); // init 4bpp and LCD timing
 	
 	timer_Disable(1);
+	timer_SetReload(1, 0);
 	timer_Set(1,0);
 	timer_Enable(1,TIMER_32K,TIMER_NOINT,TIMER_DOWN); 
 	
@@ -109,8 +110,7 @@ void initVM() {
 	
 	memset(vmVar,0,sizeof(vmVar)); 
 	currentPart = 0;
-	// decompress file into ram buffer 
-	zx7_Decompress(poly2,getFileDataPtr(0x11)); 
+	poly2Ptr = getFileDataPtr(0x11); // animation file
 	
 	srandom(rtc_Time()); 
 	
@@ -167,34 +167,16 @@ uint8_t loadResource(uint16_t id) {
 	{ 
 		// decompress image into vram 
 		void* ptr = getFileDataPtr(id);
-		zx7_Decompress((void *)(0xD40C80),ptr);
+		zx0_Decompress((void *)(0xD40C80),ptr);
 	} 
 	
 	return 1; 
 } 
 
-void adjustPalettes() { 
-	for(uint24_t i = 0;i<SIZEPAL;i+=2) { 
-		uint8_t r = (palettes[i+1]&0x0F)<<1; 
-		uint8_t g = (palettes[i+1]&0xF0)>>3; 
-		uint8_t b = (palettes[i]&0x0F)<<1;
-	/* 		
-		b += (b > 0)?1:0; 
-		g += (g > 0)?1:0; 
-		r += (r > 0)?1:0;  */
-		
-		uint8_t low = (g<<5) + r ; 		
-		uint8_t high = (b<<2) + (g>>3);
-		palettes[i] = low;
-		palettes[i+1] = high;
-	} 
-} 
-
 void loadPart(uint8_t part) { 
 	loadedNewPart = true; 
 	
-	zx7_Decompress(palettes,getFileDataPtr(parts[part][0])); 
-	adjustPalettes(); 
+	zx0_Decompress(palettes,getFileDataPtr(parts[part][0])); 
 	
 	bytecodePtr = (uint8_t*)getFileDataPtr(parts[part][1]);
 	poly1Ptr = (uint8_t*)getFileDataPtr(parts[part][2]);
