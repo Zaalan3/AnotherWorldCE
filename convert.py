@@ -36,7 +36,7 @@ def decompress(packedSize,buffer):
 
     datasize = readWord()
     writeIndex = datasize - 1
-    readWord() # dummy read to skip chekcsum word
+    readWord() # dummy read to skip checksum word
     chunk = readWord()
 
     def writeByte(b):
