@@ -2,11 +2,20 @@
 #define AWVM_H 
 	
 #include <stdint.h>
+#include <stdbool.h>
 
 #define NUMVARS 256 
 #define NUMTHREADS 64 
 #define SIZEPOLY2 25108
 #define SIZEPAL 2048 
+
+struct vmData { 
+	uint24_t var[NUMVARS]; 
+	uint24_t threadPC[NUMTHREADS]; 
+	uint8_t threadFlag[NUMTHREADS];
+	uint24_t reqThreadPC[NUMTHREADS]; 
+	uint8_t reqThreadFlag[NUMTHREADS]; 
+}; 
 
 extern uint16_t recipTable[1024]; 
 extern uint8_t edgeList[1440];
@@ -18,11 +27,9 @@ extern uint8_t* poly2Ptr;
 extern uint8_t currentPalette;
 extern uint8_t palettes[SIZEPAL];
 
-extern uint24_t vmVar[NUMVARS]; 
-extern uint24_t threadPC[NUMTHREADS]; 
-extern uint8_t threadFlag[NUMTHREADS];
-extern uint24_t reqThreadPC[NUMTHREADS]; 
-extern uint8_t reqThreadFlag[NUMTHREADS]; 
+extern struct vmData vm; 
+extern bool canSavestate;
+extern bool savestateValid; 
 
 extern uint8_t* vbuffer1; 
 extern uint8_t* vbuffer2; 
@@ -38,6 +45,9 @@ void closeVM();
 void* getFileDataPtr(uint8_t id);
 void loadPart(uint8_t part);  
 uint8_t loadResource(uint16_t id);
+
+void savestate(); 
+void loadstate(); 
 
 #endif 
 

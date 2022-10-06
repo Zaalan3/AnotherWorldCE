@@ -27,7 +27,7 @@ void getCharAlpha() {
 			break;
 		}
 	}
-	vmVar[0xDA] = key; 
+	vm.var[0xDA] = key; 
 } 
 
 void getPlayerInput() { 
@@ -58,10 +58,10 @@ void getPlayerInput() {
 		} 
 		
 		
-		vmVar[0xE5] = ud;
-		vmVar[0xFB] = ud; 
-		vmVar[0xFC] = lr;
-		vmVar[0xFD] = mask; 
+		vm.var[0xE5] = ud;
+		vm.var[0xFB] = ud; 
+		vm.var[0xFC] = lr;
+		vm.var[0xFD] = mask; 
 		
 		if (kb_IsDown(kb_KeyAlpha)) // alpha = action button 
 		{
@@ -70,8 +70,8 @@ void getPlayerInput() {
 		}
 		
 		
-		vmVar[0xFA] = action; 
-		vmVar[0xFE] = mask; 
+		vm.var[0xFA] = action; 
+		vm.var[0xFE] = mask; 
 		
 } 
 

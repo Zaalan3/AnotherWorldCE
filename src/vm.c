@@ -25,11 +25,13 @@ uint8_t* poly2Ptr;
 uint8_t currentPalette;
 uint8_t palettes[SIZEPAL];
 
-uint24_t vmVar[NUMVARS]; 
-uint24_t threadPC[NUMTHREADS]; 
-uint8_t threadFlag[NUMTHREADS]; 
-uint24_t reqThreadPC[NUMTHREADS]; 
-uint8_t reqThreadFlag[NUMTHREADS]; 
+struct vmData vm; 
+struct vmData vmBackup; 
+uint8_t page1Backup[160*200];
+void* vramBackup; 
+
+bool canSavestate;
+bool savestateValid;
 
 uint8_t* vbuffer1; 
 uint8_t* vbuffer2; 
@@ -109,19 +111,22 @@ void initVM() {
 	for( uint24_t i = 1; i<1024; i++)
 		recipTable[i] = 65536/(i+1); 
 	
-	memset(vmVar,0,sizeof(vmVar)); 
+	memset(vm.var,0,sizeof(vm.var)); 
 	currentPart = 0;
 	poly2Ptr = getFileDataPtr(0x11); // animation file
 	
+	// need at least 95KB of free RAM for savestates to be enabled 
+	canSavestate = os_MemChk(&vramBackup) > (160*200*3); 
+	savestateValid = false; 
+	
 	srandom(rtc_Time()); 
+	vm.var[0x3C] = random();
+	vm.var[0x54] = 0x81; 
 	
-	vmVar[0x3C] = random();
-	vmVar[0x54] = 0x81; 
-	
-	vmVar[0xBC] = 0x10;
-	vmVar[0xC6] = 0x80;
-	vmVar[0xF2] = 4000;
-	vmVar[0xDC] = 33;
+	vm.var[0xBC] = 0x10;
+	vm.var[0xC6] = 0x80;
+	vm.var[0xF2] = 4000;
+	vm.var[0xDC] = 33;
 	
 	currentPalette = 1;
 	loadPart(1); 
@@ -129,25 +134,25 @@ void initVM() {
 
 void runVM() { 
 	loadedNewPart = false; 
-	memcpy(threadFlag,reqThreadFlag,sizeof(threadFlag)); 
+	memcpy(vm.threadFlag,vm.reqThreadFlag,sizeof(vm.threadFlag)); 
 	
 	for(uint8_t i = 0;i<NUMTHREADS;i++) { 
-		if(reqThreadPC[i] != 0xFFFFFF) { 
-			if(reqThreadPC[i]==0xFFFE)
-				threadPC[i] = 0xFFFFFF;
+		if(vm.reqThreadPC[i] != 0xFFFFFF) { 
+			if(vm.reqThreadPC[i]==0xFFFE)
+				vm.threadPC[i] = 0xFFFFFF;
 			else 
-				threadPC[i] = reqThreadPC[i]; 
+				vm.threadPC[i] = vm.reqThreadPC[i]; 
 			
-			reqThreadPC[i] = 0xFFFFFF; 
+			vm.reqThreadPC[i] = 0xFFFFFF; 
 		} 
 	}
 	
 	for(uint8_t i = 0;i<NUMTHREADS;i++) { 
-		if(threadFlag[i]) continue; 
-		if((threadPC[i] != 0xFFFFFF)) { 
-			uint24_t newpc = executeThread(threadPC[i]); 
+		if(vm.threadFlag[i]) continue; 
+		if((vm.threadPC[i] != 0xFFFFFF)) { 
+			uint24_t newpc = executeThread(vm.threadPC[i]); 
 			if (loadedNewPart) break; 
-			threadPC[i] = newpc; 
+			vm.threadPC[i] = newpc; 
 		} 
 	} 
 	
@@ -182,16 +187,27 @@ void loadPart(uint8_t part) {
 	bytecodePtr = (uint8_t*)getFileDataPtr(parts[part][1]);
 	poly1Ptr = (uint8_t*)getFileDataPtr(parts[part][2]);
 	 
-	vmVar[0] = currentPart; 
+	vm.var[0] = currentPart; 
 	currentPart = part;
-	vmVar[0xE4] = 0x14;
+	vm.var[0xE4] = 0x14;
 
 	// reset thread information
-	memset(threadFlag,0,sizeof(threadFlag));
-	memset(threadPC,0xFF,sizeof(threadPC));
-	memset(reqThreadFlag,0,sizeof(reqThreadFlag));
-	memset(reqThreadPC,0xFF,sizeof(reqThreadPC));
+	memset(vm.threadFlag,0,sizeof(vm.threadFlag));
+	memset(vm.threadPC,0xFF,sizeof(vm.threadPC));
+	memset(vm.reqThreadFlag,0,sizeof(vm.reqThreadFlag));
+	memset(vm.reqThreadPC,0xFF,sizeof(vm.reqThreadPC));
 	
-	threadPC[0] = 0; 
+	vm.threadPC[0] = 0; 
 } 
-	
+
+
+void savestate(void) { 
+	if(canSavestate) { 
+		// insert code
+	} 
+} 
+
+void loadstate(void) { 
+	if(savestateValid) {
+	}
+}

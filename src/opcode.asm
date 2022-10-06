@@ -20,6 +20,10 @@ gfxFillScreenFastCode:=$E30800
 threadStack:=$0720	; end of textShadow
 polygonVars:=$E30A00
 
+vm_var:=_vm 
+vm_reqThreadPC:=_vm+3*256+3*64+64 
+vm_reqThreadFlag:=_vm+3*256+3*64+64+3*64
+
 
 macro loadHLVarAddr offset 
 	ld c,(iy+offset) 
@@ -72,7 +76,7 @@ _executeThread:
 	push ix
 	ld iy,(_bytecodePtr)	; iy = thread PC
 	add iy,de 
-	ld hl,_vmVar
+	ld hl,vm_var
 	ld i,hl 	; i = var pointer 
 	ld.sis sp,threadStack 	 
 fetchOpcode: 	; return point for opcodes
@@ -128,7 +132,7 @@ opcode80:
 	; load temporary stack for polygons
 	call _drawPolygon
 	pop iy
-	ld hl,_vmVar
+	ld hl,vm_var
 	ld i,hl
 	jq fetchOpcode 
 
@@ -247,7 +251,7 @@ opcode40:
 	add hl,hl
 	ld (iy+5),hl
 	call _drawPolygon
-	ld hl,_vmVar
+	ld hl,vm_var
 	ld i,hl
 	pop iy
 	jq fetchOpcode
@@ -607,7 +611,7 @@ setThreadPC:
 	ld c,(iy+1) 
 	ld b,3 
 	mlt bc 
-	ld hl,_reqThreadPC  
+	ld hl,vm_reqThreadPC  
 	add hl,bc
 	ex de,hl 
 	
@@ -638,7 +642,7 @@ resetThreads:
 	lea iy,iy+4
 	cp a,2
 	jr Z,.kill 
-	ld de,_reqThreadFlag
+	ld de,vm_reqThreadFlag
 	add hl,de 
 	push hl 
 	pop de 
@@ -657,7 +661,7 @@ resetThreads:
 	ld b,h 
 	mlt hl 
 	mlt bc
-	ld de,_reqThreadPC 
+	ld de,vm_reqThreadPC 
 	add hl,de
 	ld de,$00FFFE 
 	ld (hl),de 
@@ -777,7 +781,7 @@ copyBuffer:
 	push hl 	; dst
 	pop ix
 	; var[249] is scroll variable
-	ld bc,(_vmVar + 249*3) ; bc = scroll
+	ld bc,(vm_var + 249*3) ; bc = scroll
 	ld hl,-199 
 	or a,a 
 	sbc hl,bc ; return if scroll<=-199 or scroll>=199 
@@ -846,7 +850,7 @@ blitBuffer:
 	ld a,(iy+1) 
 	or a,a 
 	sbc hl,hl 
-	ld (_vmVar + 247*3),hl ; this variable gets reset every blit for some reason 
+	ld (vm_var + 247*3),hl ; this variable gets reset every blit for some reason 
 	cp a,$FE 
 	jr Z,.setScreen
 	cp a,$FF
@@ -889,7 +893,7 @@ blitBuffer:
 	ldir
 	
 	;wait [0xFF] frames 
-	ld a,(_vmVar + 255*3)
+	ld a,(vm_var + 255*3)
 	ld h,a ; timer counter = 163*4*([0xFF])
 	ld l,163 
 	mlt hl 
@@ -954,6 +958,7 @@ opcodeTable:
 	emit 3: loadFile
 	emit 3: playMusic ;0x1A
 	
+extern _vm 
 
 extern _bytecodePtr
 extern _poly1Ptr
@@ -961,10 +966,6 @@ extern _poly2Ptr
 
 extern _currentPalette
 extern _palettes
-
-extern _vmVar
-extern _reqThreadPC
-extern _reqThreadFlag
 
 extern _vbuffer1 
 extern _vbuffer2
