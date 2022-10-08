@@ -83,7 +83,7 @@ pointblend:
 	
 pointcopy:
 	rr b 
-	jr nc,.even 
+	jr nc,.even
 .odd: 
 	ex de,hl 
 	add hl,de

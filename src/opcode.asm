@@ -1,3 +1,5 @@
+include 'ti84pceg.inc'
+
 section .text
 
 public _executeThread
@@ -7,15 +9,7 @@ public blitBuffer
 ; i = var array 
 ; sps = call stack 
 
-currentScreen:=$E30010
-lcdRis:=$E30020 
-lcdIcr:=$E30028
-lcdPalette:=$E30200
-
-timer1Counter:=$F20000
-timer1Reload:=$F20004 
-timerControl:=$F20030
-gfxFillScreenFastCode:=$E30800	
+gfxFillScreenFastCode:=ti.mpLcdCrsrImage	
 
 threadStack:=$0720	; end of textShadow
 polygonVars:=$E30A00
@@ -384,7 +378,7 @@ orconst:
 ; var[pc[1]] <<= pc[2]<<8 + pc[3] 
 ; pc += 4 
 ; ( in what world is this value ever greater than a nibble?) 
-shl: 
+shiftl: 
 	loadHLVarAddr 1
 	ld de,(hl)
 	ex de,hl 
@@ -400,7 +394,7 @@ shl:
 	
 ; var[pc[1]] >>= pc[2]<<8 + pc[3] 
 ; pc += 4 
-shr: 
+shiftr: 
 	loadHLVarAddr 1
 	ld de,(hl)
 	ex de,hl
@@ -806,7 +800,7 @@ copyBuffer:
 	mlt bc ; bc = 160*scroll
 	ex de,hl ; de = 160*(200-scroll)
 	lea hl,ix+0 ; hl = dst 
-	add hl,bc ; dst+= 
+	add hl,bc ; dst+160*(200-scroll)
 	push hl 
 	push de 
 	pop bc ; bc = len 
@@ -824,7 +818,7 @@ copyBuffer:
 	ld h,160 
 	mlt hl ; hl = 160*-scroll
 	pop bc  
-	add hl,bc ; src+= 
+	add hl,bc ; src+(160*-scroll)
 	push de 
 	pop bc 
 	lea de,ix+0
@@ -880,7 +874,7 @@ blitBuffer:
 	call waitTimer
 	call waitVComp
 	ld hl,(_vbuffer2) 
-	ld (currentScreen),hl
+	ld (ti.mpLcdBase),hl
 .copyPalette: 
 	ld a,(_currentPalette)
 	ld d,a 
@@ -888,7 +882,7 @@ blitBuffer:
 	mlt de 
 	ld hl,_palettes
 	add hl,de 
-	ld de,lcdPalette
+	ld de,ti.mpLcdPalette
 	ld bc,32 
 	ldir
 	
@@ -900,9 +894,9 @@ blitBuffer:
 	add hl,hl
 	add hl,hl
 	ex de,hl 
-	ld hl,timerControl
+	ld hl,ti.mpTmrCtrl
 	res 0,(hl)
-	ld (timer1Counter),de
+	ld (ti.mpTmr1Counter),de
 	set 0,(hl) 
 	
 .skipwait: 
@@ -910,10 +904,10 @@ blitBuffer:
 	jp fetchOpcode
 	
 waitVComp:
-	ld a,1000b 
-	ld (lcdIcr),a
+	ld a,1000b
+	ld (ti.mpLcdIcr),a
 .loop: 	; wait until front porch to swap palette
-	ld a,(lcdRis)
+	ld a,(ti.mpLcdRis)
 	bit 3,a 
 	jr Z,.loop 
 	ret 
@@ -923,7 +917,7 @@ waitTimer:
 	sbc hl,hl 
 	ex de,hl 
 .loop: 
-	ld hl,(timer1Counter)
+	ld hl,(ti.mpTmr1Counter)
 	sbc hl,de 
 	jr nz,.loop
 	ret 
@@ -952,8 +946,8 @@ opcodeTable:
 	emit 3: subvar 
 	emit 3: andconst	; 0x14 
 	emit 3: orconst
-	emit 3: shl
-	emit 3: shr  
+	emit 3: shiftl
+	emit 3: shiftr  
 	emit 3: playSound 	; 0x18 
 	emit 3: loadFile
 	emit 3: playMusic ;0x1A
