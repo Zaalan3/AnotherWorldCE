@@ -150,10 +150,12 @@ def adjustPalettes(buffer):
         g = (buffer[i+1]&0xF0)>>3
         b = (buffer[i]&0x0F)<<1
         
-        buffer[i] = (g<<5)&0b11100000 + r
-        buffer[i+1] = (b<<2) + (g>>3)
+        buffer[i+1] = ((g<<5)&0b11100000) + r
+        buffer[i] = (b<<2) + (g>>3)
     return buffer 
 
+
+subprocess.run('mkdir out',shell=True)
 #iterate through list of entries and decompress and save to individual files
 for entry in mementry:
     bank = entry['bank']
@@ -187,13 +189,13 @@ for entry in mementry:
     print(f'Size: {len(buffer)}')
 
     entryname = f'AW{index:X}'
-    with open(entryname + '.bin','wb') as f: 
+    with open('out/' + entryname + '.bin','wb') as f: 
         f.write(buffer)
 
     if (entry['type'] == 2 or entry['type'] == 3):
-        flags = '-c zx0'
+        flags = '-c zx7'
 
-    subprocess.run(f'convbin -i {entryname}.bin {flags} -k 8xv -r -o {entryname}.8xv -n {entryname}', shell = True)
+    subprocess.run(f'convbin {flags} -j bin -i out/{entryname}.bin  -k 8xv -r -o out/{entryname}.8xv -n {entryname}', shell = True)
 
 
 print('Done!')

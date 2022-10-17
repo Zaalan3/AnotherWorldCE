@@ -6,7 +6,7 @@ NAME = ANOTHERW
 ICON = icon.png
 DESCRIPTION = "Another World Interpreter."
 COMPRESSED = NO
-ARCHIVED = NO
+ARCHIVED = YES
 LTO = YES
 
 CFLAGS = -Wall -Wextra -Oz
