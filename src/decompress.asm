@@ -36,61 +36,44 @@ decompressPage:
 	push hl 
 	pop ix	; ix = output pointer  
 	
-	ld hl,(iy) 	; get block count
-	lea iy,iy+3 
-	ld de,1
-.outer: 
-	ld a,(iy) 	; get flag byte 
-	inc iy 
-	ld b,8
-.inner: 
-	exx 
-	rla 
-	; 1 = rle 
-	jq c,.rle 
-.literal: 
-	ex af,af' 
-	ld bc,0 
+.loop: 
+	ld a,(iy) 	; get flag byte
+	cp a,127 
+	jr z,.end 
+	inc iy
+	bit 7,a 
+	jr nz,.rle 
 	
-	ld c,(iy) 	; get number of literal bytes 
-	inc iy 
+.literal: 
+	and a,01111111b 
+	ld bc,0 
+	ld c,a		; get number of literal bytes  
 	inc bc
+	
 	lea de,ix+0 ; copy bytes 
 	lea hl,iy+0 
 	add ix,bc 
 	add iy,bc 
 	ldir 
-	
-	exx
-	ex af,af' 
-	or a,a 
-	sbc hl,de 
-	jq z,.end  
-	djnz .inner
-	jq .outer 
+ 
+	jq .loop 
 	
 .rle: 
-	ex af,af'
+	and a,01111111b
 	ld bc,0 
+	ld c,a 			; bc = length 
+	inc bc			; + 1 
 	
 	ld a,(iy) 		; a = color 
-	ld c,(iy+1) 	; bc = length 
-	inc bc			; length + 1  
-	lea iy,iy+2
+	inc iy
 	
 	lea hl,ix+0		; find address
 	ld (hl),a 
 	lea de,ix+1 
 	add ix,bc 
 	ldir 			; copy from offset 
-	
-	exx
-	ex af,af' 
-	or a,a 
-	sbc hl,de 
-	jq z,.end 
-	djnz .inner
-	jq .outer
+
+	jq .loop 
 	
 .end: 
 	pop ix 

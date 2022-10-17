@@ -3,11 +3,9 @@ section .text
 
 public _compressPage
 
-public writeFlagBit
 public writeLiteral
-public writeReference
-public findMatch
-public findLongestMatch
+public writeRLE
+public findLengthRLE
 
 extern getBuffer
 extern _vramBackup
@@ -20,9 +18,6 @@ MAX_OFFSET:=256
 dataStart equ iy+0 
 dataCurrent equ iy+3
 dataEnd equ iy+6  
-
-flagBits equ iy+9  
-flagPtr equ iy+10 
 
 litCountPtr equ iy+13 
 blockCount equ iy+16 
@@ -39,7 +34,7 @@ _compressPage:
     call getBuffer ; hl = page pointer 
 	; ix = output
 	; iy = vars 
-	ld ix,_vramBackup+3
+	ld ix,_vramBackup
 	ld iy,IY_VARS
 	
 	ld (dataStart),hl
@@ -48,18 +43,10 @@ _compressPage:
     add hl,de
     ld (dataEnd),hl 
 	
-	or a,a 
-	sbc hl,hl 
-	ld (blockCount),hl 
-	; initialize flag byte
-	ld (flagBits),9
-	ld (flagPtr),ix
-	inc ix 
 	; initialize first literal 
 	scf 
 	sbc hl,hl 
 	ld (litCountPtr),hl 
-	jq .literal
 	
 .loop: 
 	ld hl,(dataCurrent) ; stop if we're out of bytes 
@@ -88,31 +75,16 @@ _compressPage:
 	jr .loop 
 	
 .end: 
-	; shift flag byte up by remaining bits 
-	ld b,(flagBits) 
-	dec b 
-	jr z,.skipshr 
-	ld hl,(flagPtr) 
-	ld a,(hl) 
-.shiftr: 
-	rla 
-	djnz .shiftr 
-	ld (hl),a 
-.skipshr: 
+	ld (ix+0),127
+	inc ix 
 	lea hl,ix+0 
 	ld de,_vramBackup
 	or a,a 
 	sbc hl,de 
 	
-	ld de,(blockCount) 
-	ld ix,_vramBackup 
-	ld (ix),de 
-	
 	pop ix 
 	ret 
 	
-	
-
 ; Writes a literal byte to the output. 
 ; input: a = byte to write 
 writeLiteral:
@@ -123,6 +95,7 @@ writeLiteral:
 	dec hl 
 	ld a,(hl) 
 	inc a 
+	cp a,127
 	jr z,.newLiteral ; if literal has reached max size, invalidate 
 	ld (hl),a  
 	ld hl,(dataCurrent) 
@@ -133,10 +106,8 @@ writeLiteral:
 	ld (dataCurrent),hl 
 	ret 
 .newLiteral: 
-	or a,a 
-	call writeFlagBit	; new 0 flag bit to signify new literal 
 	ld hl,(dataCurrent)
-	ld a,(hl) 
+	ld a,(hl)
 	inc hl 
 	ld (dataCurrent),hl 
 	ld (litCountPtr),ix 
@@ -150,18 +121,14 @@ writeLiteral:
 	ret 
 	
 writeRLE: 
-	push hl 
-	scf 
-	call writeFlagBit ; 1 to flag bit for RLE 
+	ld de,(dataCurrent) ; find offset from current
+	ld a,(de) 
 	
-	ld hl,(dataCurrent) ; find offset from current
-	ld a,(hl) 
+	dec hl  			; store length - 1
 	
-	pop de 			; store length - 1
-	dec de
-	
-	ld (ix+0),a		; color  
-	ld (ix+1),e		; length 
+	set 7,l			; 1 in bit 7 for rle 
+	ld (ix+0),l		; length  	
+	ld (ix+1),a		; color
 	lea ix,ix+2
 	
 	scf 
@@ -173,32 +140,8 @@ writeRLE:
 	ld (blockCount),hl
 	ret 
 	
-	
-; writes a flag bit to the current flag byte. 
-; Fetches a new flag byte if last ran out of bits. 
-writeFlagBit:
-	push af
-	ld a,(flagBits)
-	dec a 
-	jr nz,.write 
-.new: 	
-	; fetch new flag byte if out of bits  
-	xor a,a 
-	lea hl,ix
-	ld (hl),a 
-	inc ix 
-	ld (flagPtr),hl
-	ld a,8
-.write: 
-	ld (flagBits),a
-	pop af 
-	ld hl,(flagPtr) 
-	rl (hl) 
-	ret 
-	
-	
 findLengthRLE:
-	ld b,255
+	ld b,127
 	ld hl,(dataCurrent) 
     ld a,(hl)
     inc hl 
@@ -212,125 +155,4 @@ findLengthRLE:
 	or a,a 
 	sbc hl,de 
 	ret 
-	
-	
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; writes a back-reference to the output. 
-; format: 
-; ; 0 			  15
-; oooooooo llllllll
-; hl = length  
-; de = matchPtr 
-writeReference: 
-	push hl 
-	scf 
-	call writeFlagBit ; 1 to flag bit for references 
-	
-	ld hl,(dataCurrent) ; find offset from current
-	or a,a 
-	sbc hl,de 
-	dec hl 			; store offset - 1
-	 
-	pop de 			; store length - 1
-	dec de
-	
-	ld (ix+0),l		; offset  
-	ld (ix+1),e		; length 
-	lea ix,ix+2
-	
-	scf 
-	sbc hl,hl		; invalidate last literal  
-	ld (litCountPtr),hl 
-	ret 
-
-; finds match within current data window 
-findMatch:
-	; bunch of bounds testing
-	ld hl,(dataCurrent)
-	ld de,(dataStart) 
-	or a,a 
-	sbc hl,de 
-	ld a,h 
-	or a,a 
-	jr nz,.gt256 
-.lt256: 
-	push hl 
-	pop bc 
-	inc bc
-	ld hl,(dataStart)
-	jr .match 
-.gt256: 
-	ld bc,MAX_OFFSET
-	ld hl,(dataCurrent)
-	or a,a 
-	sbc hl,bc 
-	inc bc
-.match: 	
-	call findLongestMatch
-	exx 
-	ret 
-
-; hl = start of input
-; bc = input length 
-; out: 
-; hl' = length or 0 if none found 
-; de' = match ptr or NULL if none found 
-findLongestMatch: 
-	exx 
-	or a,a 
-	sbc hl,hl 	; set match to NULL 
-	ex de,hl 
-	sbc hl,hl 
-	exx  
-.nextMatch: 
-	ld de,(dataCurrent) 
-    ld a,(de)
-    inc de 
-    cpir     	; search for matching byte 
-    ret po
-.findLength: 
-    push hl 	; hl = start of match 
-	push hl 
-	xor a,a		; limit to 256 bytes
-.lloop:			; find end of match 
-	ex af,af' 
-	dec a 
-	jr z,.llend 
-	ex af,af'
-	ld a,(de) 
-    inc de
-    cpi 
-    jr z,.lloop 
-.llend: 
-    pop de 
-    or a,a 
-    sbc hl,de	; length = matchEnd - matchStart
-	dec de 
-	push de
-	push hl
-	exx 
-	; compare to current longest match 
-	pop bc
-	or a,a 
-	sbc hl,bc 	; if newLength > oldLength : oldMatch = newMatch
-	jq nc,.lt 
-.gt: 
-	push bc 
-	pop hl 
-	pop de 
-	jr .cont 
-.lt: 
-	add hl,bc 
-	pop bc
-.cont: 
-	exx 
-	pop hl
-	dec hl
-	bit 7,b	; return if bc underflowed
-	ret nz 
-	ld a,c 
-	or a,a 
-	ret z 
-	jq .nextMatch
-	
 	
