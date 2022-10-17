@@ -1,4 +1,3 @@
-#include "vm.h" 
 
 #include <stdlib.h> 
 #include <stdint.h>
@@ -10,6 +9,13 @@
 #include <fileioc.h> 
 #include <graphx.h> 
 
+#include <debug.h>
+
+#include "vm.h" 
+#include "text.h"
+
+extern uint24_t compressPage(uint8_t page); 
+extern void decompressVRAM(void *compressed); 
 
 void initAsm(); 
 void cleanupAsm();
@@ -27,11 +33,10 @@ uint8_t palettes[SIZEPAL];
 
 struct vmData vm; 
 struct vmData vmBackup; 
-uint8_t page1Backup[160*200];
-void* vramBackup; 
+uint8_t palBackup;
+uint8_t vramBackup[160*200];
 
-bool canSavestate;
-bool savestateValid;
+bool validSave;
 
 uint8_t* vbuffer1; 
 uint8_t* vbuffer2; 
@@ -39,6 +44,8 @@ uint8_t* vbuffer3;
 
 bool loadedNewPart;
 uint8_t currentPart; 
+
+
 
 static const uint8_t fileTypes[] = { 
 	0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, //0x00
@@ -115,10 +122,6 @@ void initVM() {
 	currentPart = 0;
 	poly2Ptr = getFileDataPtr(0x11); // animation file
 	
-	// need at least 95KB of free RAM for savestates to be enabled 
-	canSavestate = os_MemChk(&vramBackup) > (160*200*3); 
-	savestateValid = false; 
-	
 	srandom(rtc_Time()); 
 	vm.var[0x3C] = random();
 	vm.var[0x54] = 0x81; 
@@ -136,6 +139,7 @@ void runVM() {
 	loadedNewPart = false; 
 	memcpy(vm.threadFlag,vm.reqThreadFlag,sizeof(vm.threadFlag)); 
 	
+	tickText();
 	for(uint8_t i = 0;i<NUMTHREADS;i++) { 
 		if(vm.reqThreadPC[i] != 0xFFFFFF) { 
 			if(vm.reqThreadPC[i]==0xFFFE)
@@ -173,7 +177,7 @@ uint8_t loadResource(uint16_t id) {
 	{ 
 		// decompress image into vram 
 		void* ptr = getFileDataPtr(id);
-		zx0_Decompress((void *)(0xD40C80),ptr);
+		zx7_Decompress((void *)(0xD40C80),ptr);
 	} 
 	
 	return 1; 
@@ -181,8 +185,9 @@ uint8_t loadResource(uint16_t id) {
 
 void loadPart(uint8_t part) { 
 	loadedNewPart = true; 
+	validSave = false; 
 	
-	zx0_Decompress(palettes,getFileDataPtr(parts[part][0])); 
+	zx7_Decompress(palettes,getFileDataPtr(parts[part][0])); 
 	
 	bytecodePtr = (uint8_t*)getFileDataPtr(parts[part][1]);
 	poly1Ptr = (uint8_t*)getFileDataPtr(parts[part][2]);
@@ -201,13 +206,52 @@ void loadPart(uint8_t part) {
 } 
 
 
-void savestate(void) { 
-	if(canSavestate) { 
-		// insert code
+void savestate(void) {
+	void *freeptr;
+	uint24_t freesize = os_MemChk(&freeptr);
+	uint24_t total = 0; 
+	dbg_printf("%d bytes free\n",freesize); 
+	
+	vmBackup = vm; 
+	palBackup = currentPalette;
+	
+	drawText(TEXT_SAVING,60);
+	for(uint8_t i = 0; i < 4; i++) { 
+		uint24_t length = compressPage(i); 
+		if(length > freesize) { 
+			validSave = false;
+			drawText(TEXT_SAVEFAILED,60); 
+			return; 
+		} 
+		
+		total += length; 
+		dbg_printf("Buffer %d : %d bytes\n",i,length); 
+		
+		if(i != 3) { 
+			memcpy(freeptr,&vramBackup,length); 
+			freeptr += length; 
+			freesize -= length;
+		}
+		
 	} 
+	
+	double ratio = total * (100.0 / (160.0*200.0*4.0)); 
+	dbg_printf("Compression Ratio: %.2f%%\n",ratio);
+	drawText(TEXT_SAVESUCCESS,60); // savestate successful text 
+	validSave = true; 
 } 
 
-void loadstate(void) { 
-	if(savestateValid) {
-	}
+void loadstate(void) {
+	void *freeptr; 
+	if(validSave) { 
+		vm = vmBackup; 
+		currentPalette = palBackup; 
+		os_MemChk(&freeptr);
+		decompressVRAM(freeptr); 
+		
+		drawText(TEXT_LOADSUCCESS,60); 
+		return; 
+	} 
+	
+	drawText(TEXT_LOADFAILED,60);
 }

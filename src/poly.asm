@@ -30,6 +30,8 @@ zoomn equ iy+5+8
 
 vertStack:=$E30B80 	; end of cursor image
 
+;TODO: fix bounding boxes 
+
 ; (zoom) * a >> 8 
 mulZoom:  
 	ld hl,(zoom)

@@ -3,7 +3,8 @@ include 'ti84pceg.inc'
 section .text
 
 public _executeThread
-public blitBuffer
+
+public getBuffer 
 
 ; iy = pc 
 ; i = var array 
@@ -92,14 +93,14 @@ drawOpcode:
 	jq killThread
 	
 opcode80: 
-	ld h,a 	; offset encoded in opcode
+	ld h,a 			; offset encoded in opcode
 	ld l,(iy+1) 
 	add.sis hl,hl 	; offset = (opcode<<8 + pc[1])*2 
 	push hl  		
 	ld de,0 
 	ld bc,0
-	ld c,(iy+3) ; bc = y
-	ld a,199	; if y > 199 : x += (y - 199) 
+	ld c,(iy+3) 	; bc = y
+	ld a,199		; if y > 199 : x += (y - 199) 
 	sub a,c  
 	jr nc,.skipXadd
 	neg 	
@@ -110,7 +111,7 @@ opcode80:
 	sbc hl,hl 
 	ld l,(iy+2) 
 	add hl,de 
-	pop de 		; de = offset 
+	pop de 			; de = offset 
 	ld ix,(_poly1Ptr)
 	ld (_polygonBase),ix
 	add ix,de 
@@ -131,10 +132,10 @@ opcode80:
 	jq fetchOpcode 
 
 opcode40: 
-	rla 	; shift out top 2 bits
+	rla 		; shift out top 2 bits
 	rla 
 	or a,a
-	sbc hl,hl ; offset 
+	sbc hl,hl 	; offset 
 	ld h,(iy+1) 
 	ld l,(iy+2)
 	add.sis hl,hl
@@ -769,16 +770,16 @@ copyBuffer:
 .scroll: 
 	and a,3 
 	call getBuffer
-	push hl 	; src 
+	push hl 		; src 
 	ld a,(iy+2) 
 	call getBuffer
-	push hl 	; dst
+	push hl 		; dst
 	pop ix
 	; var[249] is scroll variable
 	ld bc,(vm_var + 249*3) ; bc = scroll
 	ld hl,-199 
 	or a,a 
-	sbc hl,bc ; return if scroll<=-199 or scroll>=199 
+	sbc hl,bc 		; return if scroll<=-199 or scroll>=199 
 	bit 7,h 
 	jq Z,.return 
 	ld hl,198 
@@ -789,36 +790,36 @@ copyBuffer:
 	or a,a 
 	sbc hl,bc 
 	ld hl,199
-	bit 7,b ; if scroll<0
+	bit 7,b 		; if scroll<0
 	jr nz,.scrollneg
-.scrollpos:	; dst += 160*scroll , len = 160*(200-scroll)
+.scrollpos:			; dst += 160*scroll , len = 160*(200-scroll)
 	or a,a 
 	sbc hl,bc 
 	ld h,160
 	ld b,h 
 	mlt hl 
-	mlt bc ; bc = 160*scroll
-	ex de,hl ; de = 160*(200-scroll)
-	lea hl,ix+0 ; hl = dst 
-	add hl,bc ; dst+160*(200-scroll)
+	mlt bc 			; bc = 160*scroll
+	ex de,hl 		; de = 160*(200-scroll)
+	lea hl,ix+0 	; hl = dst 
+	add hl,bc 		; dst+160*(200-scroll)
 	push hl 
 	push de 
-	pop bc ; bc = len 
-	pop de ; de = dst 
-	pop hl ; hl = src
+	pop bc 			; bc = len 
+	pop de 			; de = dst 
+	pop hl 			; hl = src
 	jq .copy
-.scrollneg: ; src += 160*-scroll , len = 160*(200+scroll)
+.scrollneg: 		; src += 160*-scroll , len = 160*(200+scroll)
 	add hl,bc
 	ld h,160
 	mlt hl 
-	ex de,hl ; de =  160*(200+scroll)
+	ex de,hl 		; de =  160*(200+scroll)
 	or a,a 
 	sbc hl,hl 
 	sbc hl,bc 
 	ld h,160 
-	mlt hl ; hl = 160*-scroll
+	mlt hl 			; hl = 160*-scroll
 	pop bc  
-	add hl,bc ; src+(160*-scroll)
+	add hl,bc 		; src+(160*-scroll)
 	push de 
 	pop bc 
 	lea de,ix+0
@@ -888,7 +889,7 @@ blitBuffer:
 	
 	;wait [0xFF] frames 
 	ld a,(vm_var + 255*3)
-	ld h,a ; timer counter = 163*4*([0xFF])
+	ld h,a 		; timer counter = 163*4*([0xFF])
 	ld l,163 
 	mlt hl 
 	add hl,hl

@@ -2,17 +2,24 @@ section .text
 
 public _drawString
 public _drawText 
-public _clearText
+public _tickText
 
 extern _stringTable
 extern _font
 
 ; draw string at top of every screen 
 _drawText: 
+	call clearText  
 	pop de 
 	pop hl 
+	pop bc  
+	push bc  
 	push hl 
 	push de 
+	push ix 
+	ld a,c 
+	ld (textTimer),a 
+	
 	ld a,$FF 
 	ld de,$D40000
 	call _drawString
@@ -33,18 +40,51 @@ _drawText:
 	ld bc,160*16 
 	ldir 
 	
+	pop ix 
 	ret 
 	
-_clearText: 
+_tickText: 
+	ld a,0 
+textTimer:=$-1 
+	or a,a 
+	ret z
+	dec a 
+	ld (textTimer),a 
+	ret nz
+clearText: 
+
 	ld hl,$D40000 
 	xor a,a 
 	ld (hl),a 
-	push hl 
-	pop de 
-	inc de 
-	ld bc,160*16 
+	ld de,$D40001 
+	ld bc,160*20 - 1
 	ldir 
-	jq _drawText.copy
+	
+	ld hl,$D40000 
+	ld de,$D40000 + 160*219
+	ld bc,160*20
+	ldir 
+	
+	ld hl,$D40000 
+	ld de,$D49600
+	ld bc,160*20 
+	ldir 
+	
+	ld hl,$D40000 + 160*220 
+	ld de,$D49600 + 160*219 
+	ld bc,160*40 
+	ldir 
+	
+	ld hl,$D40000 + 160*220
+	ld de,$D52C00 + 160*220 
+	ld bc,160*40
+	ldir
+	
+	ld hl,$D40000 + 160*220
+	ld de,$D5C200 + 160*220 
+	ld bc,160*20
+	ldir
+	
 	ret 
 	
 ; hl = string entry 

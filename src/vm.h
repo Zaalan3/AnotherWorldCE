@@ -28,8 +28,6 @@ extern uint8_t currentPalette;
 extern uint8_t palettes[SIZEPAL];
 
 extern struct vmData vm; 
-extern bool canSavestate;
-extern bool savestateValid; 
 
 extern uint8_t* vbuffer1; 
 extern uint8_t* vbuffer2; 

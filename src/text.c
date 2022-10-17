@@ -143,6 +143,12 @@ const struct StringEntry stringTable[] =
 	{ 0x193, "Monsieur est en parfaite sante." },
 	{ 0x194, "Y\n" },
 	{ 0x193, "AU BOULOT !!!\n" },
+	{ 0x2FE, "Saving...\n" },
+	{ 0x2FF, "Loading...\n" },
+	{ 0x300, "Savestate Failed: Insufficient RAM"}, 
+	{ 0x301, "Loadstate Failed: No valid savestate"}, 
+	{ 0x302, "Savestate Successful"},
+	{ 0x303, "Savestate Loaded"},
 }; 
 	
 

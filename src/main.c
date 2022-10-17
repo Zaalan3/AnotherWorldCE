@@ -77,21 +77,20 @@ void getPlayerInput() {
 
 int main(void)
 {
-	uint8_t textTimer = 60;
 	initVM(); 
-	drawText(0); // test string / intro primer. 
+	drawText(0,58); // test string / intro primer. 
 	kb_SetMode(MODE_3_CONTINUOUS); 
-	kb_Scan(); 
+	kb_Scan();
 	
 	while(!kb_IsDown(kb_KeyDel)) { 
-		if (textTimer) { 
-			if(!(--textTimer)) 
-				clearText(); 
-		} 
-			
-	
-		if(kb_IsDown(kb_KeyZoom)) 
+		
+		if(kb_IsDown(kb_KeyZoom)) { 
 			loadPart(9);
+		} else if(kb_IsDown(kb_KeyGraph)) { 
+			savestate(); 
+		} else if(kb_IsDown(kb_KeyTrace)) { 
+			loadstate(); 
+		} 
 		
 		runVM();
 		
@@ -101,8 +100,6 @@ int main(void)
 			getCharAlpha(); 
 		
 		getPlayerInput(); 
-		
-		
 	} 	
 	
 	closeVM(); 
