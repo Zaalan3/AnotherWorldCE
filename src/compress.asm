@@ -12,7 +12,7 @@ extern _vramBackup
 
 IY_VARS:=$E30B80 
 
-MAX_MATCH_LENGTH:=256 	; 10 bits for match length
+MAX_MATCH_LENGTH:=256 	
 MAX_OFFSET:=256
 
 dataStart equ iy+0 
