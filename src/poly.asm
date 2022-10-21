@@ -277,7 +277,7 @@ polyHierarchy:
 	ret 
 	
 ; ----------------------------------------------	
-	
+; polygon scan conversion and clipping
 x0 equ ix+9 
 y0 equ ix+6
 x1 equ ix+3 

@@ -145,13 +145,13 @@ def interleavePlanes(buffer):
 
 #adjust palette to rgb555 format 
 def adjustPalettes(buffer):
-    for i in range(0,2047,2):
+    for i in range(0,2048,2):
         r = (buffer[i+1]&0x0F)<<1
         g = (buffer[i+1]&0xF0)>>3
         b = (buffer[i]&0x0F)<<1
         
-        buffer[i+1] = ((g<<5)&0b11100000) + r
-        buffer[i] = (b<<2) + (g>>3)
+        buffer[i] = ((g<<5)&0b11100000) + r
+        buffer[i+1] = (b<<2) + (g>>3)
     return buffer 
 
 
