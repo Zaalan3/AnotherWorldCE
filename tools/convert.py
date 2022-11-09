@@ -143,19 +143,24 @@ def interleavePlanes(buffer):
             c3 <<= 2
     return merged
 
-#adjust palette to rgb555 format 
+#adjust palette to rgb555 format
 def adjustPalettes(buffer):
     for i in range(0,2048,2):
         r = (buffer[i+1]&0x0F)<<1
         g = (buffer[i+1]&0xF0)>>3
         b = (buffer[i]&0x0F)<<1
-        
+
         buffer[i] = ((g<<5)&0b11100000) + r
         buffer[i+1] = (b<<2) + (g>>3)
-    return buffer 
+    return buffer
 
 
-subprocess.run('mkdir out',shell=True)
+try: 
+	os.mkdir("out") 
+except Exception: 
+	pass
+
+
 #iterate through list of entries and decompress and save to individual files
 for entry in mementry:
     bank = entry['bank']
@@ -185,17 +190,18 @@ for entry in mementry:
         buffer = interleavePlanes(buffer)
     elif entry['type'] == 3:
         buffer = adjustPalettes(buffer)
-        
+
     print(f'Size: {len(buffer)}')
 
     entryname = f'AW{index:X}'
-    with open('out/' + entryname + '.bin','wb') as f: 
+    with open('out\\' + entryname + '.bin','wb') as f:
         f.write(buffer)
 
     if (entry['type'] == 2 or entry['type'] == 3):
         flags = '-c zx7'
 
-    subprocess.run(f'convbin {flags} -j bin -i out/{entryname}.bin  -k 8xv -r -o out/{entryname}.8xv -n {entryname}', shell = True)
+    subprocess.run(f'convbin {flags} -j bin -i out\\{entryname}.bin  -k 8xv -r -o out\\{entryname}.8xv -n {entryname}', shell = True)
+    os.remove(f"out\\{entryname}.bin")
 
 
 print('Done!')

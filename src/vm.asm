@@ -5,6 +5,7 @@ section .text
 public _initAsm 
 public _cleanupAsm
 
+
 lcdVBP:=ti.mpLcdTiming1+3 
 
 _initAsm: 
