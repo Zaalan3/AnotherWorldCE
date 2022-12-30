@@ -235,8 +235,8 @@ void savestate(void) {
 		
 	} 
 	
-	double ratio = total * (100.0 / (160.0*200.0*4.0)); 
-	dbg_printf("Compression Ratio: %.2f%%\n",ratio);
+	//double ratio = total * (100.0 / (160.0*200.0*4.0)); 
+	//dbg_printf("Compression Ratio: %.2f%%\n",ratio);
 	drawText(TEXT_SAVESUCCESS,60); // savestate successful text 
 	validSave = true; 
 } 
