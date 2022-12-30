@@ -873,9 +873,9 @@ blitBuffer:
 	ld (_vbuffer2),hl
 .setScreen: 
 	call waitTimer
-	call waitVComp
 	ld hl,(_vbuffer2) 
 	ld (ti.mpLcdBase),hl
+	call waitVComp
 .copyPalette: 
 	ld a,(_currentPalette)
 	ld d,a 

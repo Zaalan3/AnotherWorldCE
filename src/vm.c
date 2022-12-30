@@ -209,7 +209,7 @@ void loadPart(uint8_t part) {
 void savestate(void) {
 	void *freeptr;
 	uint24_t freesize = os_MemChk(&freeptr);
-	uint24_t total = 0; 
+	//uint24_t total = 0; 
 	dbg_printf("%d bytes free\n",freesize); 
 	
 	vmBackup = vm; 
@@ -224,7 +224,7 @@ void savestate(void) {
 			return; 
 		} 
 		
-		total += length; 
+		//total += length; 
 		dbg_printf("Buffer %d : %d bytes\n",i,length); 
 		
 		if(i != 3) { 

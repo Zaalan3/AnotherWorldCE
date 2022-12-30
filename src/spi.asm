@@ -72,7 +72,7 @@ spiCmd:
 	
 ; changes refresh method to eliminate tearing
 spiInit: 
-	spi $C6,$03
+	spi $C6,$04
 	spi $B2,$00,$78,$01,$11,$11 
 	spi $B0,$12,$F0
 	ret 
