@@ -37,9 +37,6 @@ end macro
 public spiParam
 public spiCmd
 
-public spiInit
-public spiEnd
-
 spiParam:
 	scf
 	virtual
@@ -70,14 +67,21 @@ spiCmd:
 	ld	(hl), a
 	ret
 	
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+public spiInit
+public spiEnd
+
+	
 ; changes refresh method to eliminate tearing
 spiInit: 
-	spi $C6,$04
-	spi $B2,$00,$78,$01,$11,$11 
-	spi $B0,$12,$F0
+	spi $C6,$04						; set scan speed   
+	spi $B2,$00,$78,$01,$11,$11 	; disable back porch 
+	spi $B0,$12,$F0					; enable VSync Interface
 	ret 
 	
 ; return SPI mode
 spiEnd:
-	spi $B0,$11,$F0
+	spi $B0,$11,$F0					; go back to RGB interface
 	ret 
+	
