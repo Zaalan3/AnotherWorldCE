@@ -20,7 +20,7 @@ vm_reqThreadPC:=_vm+3*256+3*64+64
 vm_reqThreadFlag:=_vm+3*256+3*64+64+3*64
 
 
-macro loadHLVarAddr offset 
+macro loadHLVarAddr offset
 	ld c,(iy+offset) 
 	ld b,3 
 	mlt bc 
@@ -538,25 +538,25 @@ jumpcond:
 
 
 beq: 
-	jq Z,jumpcond.loadoffset
-	jq jumpcond.return
+	jr z,jumpcond.loadoffset
+	jr jumpcond.return
 	
 bne: 
-	jq nz,jumpcond.loadoffset
-	jq jumpcond.return
+	jr nz,jumpcond.loadoffset
+	jr jumpcond.return
 	
 bgt: 
-	jq Z,jumpcond.return
-	jq nc,jumpcond.loadoffset
-	jq jumpcond.return	
+	jr z,jumpcond.return
+	jr nc,jumpcond.loadoffset
+	jr jumpcond.return	
 	
 bge: 
-	jq nc,jumpcond.loadoffset
-	jq jumpcond.return	
+	jr nc,jumpcond.loadoffset
+	jr jumpcond.return	
 	
 blt: 
-	jq c,jumpcond.loadoffset
-	jq jumpcond.return		
+	jr c,jumpcond.loadoffset
+	jr jumpcond.return		
 	
 ble: 
 	jq Z,jumpcond.loadoffset
