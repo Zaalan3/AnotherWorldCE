@@ -5,6 +5,8 @@ section .text
 public _initAsm 
 public _cleanupAsm
 
+define cemu 0
+
 _initAsm: 
 	; set bpp = 4
 	ld a,(ti.mpLcdCtrl) 
@@ -16,18 +18,24 @@ _initAsm:
 	ld (ti.mpLcdCtrl+1),a
 	
 	; set LCD timing 
-	ld hl,lcdTiming 
-	ld de,ti.mpLcdTiming0 
-	ld bc,8 
-	ldir
-	ld hl,1023 
-	ld (ti.mpLcdTiming2+2),hl
-	jp spiInit 
+	
+	if cemu = 0 
+		ld hl,lcdTiming 
+		ld de,ti.mpLcdTiming0 
+		ld bc,8 
+		ldir
+		ld hl,1023 
+		ld (ti.mpLcdTiming2+2),hl
+		call spiInit
+	end if
+	
+	ret
 
 _cleanupAsm:
 	ld hl,239
 	ld (ti.mpLcdTiming2+2),hl
-	jp spiEnd
+	call spiEnd
+	ret 
 	
 
 lcdTiming: 

@@ -124,8 +124,9 @@ void initVM() {
 	
 	srandom(rtc_Time()); 
 	vm.var[0x3C] = random();
-	vm.var[0x54] = 0x81; 
+	vm.var[0x54] = 0x81;
 	
+	// bypass copy protection
 	vm.var[0xBC] = 0x10;
 	vm.var[0xC6] = 0x80;
 	vm.var[0xF2] = 4000;
@@ -153,7 +154,7 @@ void runVM() {
 	
 	for(uint8_t i = 0;i<NUMTHREADS;i++) { 
 		if(vm.threadFlag[i]) continue; 
-		if((vm.threadPC[i] != 0xFFFFFF)) { 
+		if((vm.threadPC[i] < 0xFFFE)) { 
 			uint24_t newpc = executeThread(vm.threadPC[i]); 
 			if (loadedNewPart) break; 
 			vm.threadPC[i] = newpc; 
@@ -192,7 +193,6 @@ void loadPart(uint8_t part) {
 	bytecodePtr = (uint8_t*)getFileDataPtr(parts[part][1]);
 	poly1Ptr = (uint8_t*)getFileDataPtr(parts[part][2]);
 	 
-	vm.var[0] = currentPart; 
 	currentPart = part;
 	vm.var[0xE4] = 0x14;
 
@@ -209,8 +209,6 @@ void loadPart(uint8_t part) {
 void savestate(void) {
 	void *freeptr;
 	uint24_t freesize = os_MemChk(&freeptr);
-	//uint24_t total = 0; 
-	dbg_printf("%d bytes free\n",freesize); 
 	
 	vmBackup = vm; 
 	palBackup = currentPalette;
@@ -223,10 +221,7 @@ void savestate(void) {
 			drawText(TEXT_SAVEFAILED,60); 
 			return; 
 		} 
-		
-		//total += length; 
-		dbg_printf("Buffer %d : %d bytes\n",i,length); 
-		
+
 		if(i != 3) { 
 			memcpy(freeptr,&vramBackup,length); 
 			freeptr += length; 
@@ -235,8 +230,6 @@ void savestate(void) {
 		
 	} 
 	
-	//double ratio = total * (100.0 / (160.0*200.0*4.0)); 
-	//dbg_printf("Compression Ratio: %.2f%%\n",ratio);
 	drawText(TEXT_SAVESUCCESS,60); // savestate successful text 
 	validSave = true; 
 } 
