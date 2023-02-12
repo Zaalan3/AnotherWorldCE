@@ -142,49 +142,48 @@ drawColor:
 	jr z,.point 
 	ld c,a ; c = count for ldir 
 	
+	ld a,i
 	lea de,ix+0 ; get first pixel  
 	add hl,de 
 	ld b,(iy+5) ; b = lsb's 
 	srl b	; draw leftmost pixel if odd(doesnt overlap with ldir) 
-	jr nc,.skipleft 
-	ld a,i 
+	jr nc,.fullleft  
 	and a,$F0 
 	ld e,a 
 	ld a,(hl) 
 	and a,$0F 
-	or a,e 
-	ld (hl),a
+	or a,e
 	ld e,ixl 
-	dec c
-.skipleft: 
+.fullleft: 
+	ld (hl),a 
+	
 	or a,a 
 	sbc hl,hl 
 	ld l,(iy+4)
-	add hl,de  ; get last pixel 
+	add hl,de  ; get last pixel
+	ld a,i
 	srl b ; draw rightmost pixel if even 
-	jr c,.skipright 
-	ld a,i 
+	jr c,.fullright 
 	and a,$0F 
 	ld e,a 
 	ld a,(hl) 
-	and a,$F0  
-	or a,e 
+	and a,$F0 
+	or a,e
+	ld e,ixl 
+.fullright: 
 	ld (hl),a
-	dec hl
-	dec c
+	dec hl  
+	dec c 
+	dec c 
 	jr z,.pointw
-	ld a,159  
+	ld a,159 
 	cp a,c 
-	jr c,.skipblit
-.skipright: 
+	jr c,.skipblit 
 	push hl 
 	pop de 
 	dec de 
 	ld a,i
 	ld (hl),a 
-	ld a,c 
-	or a,a 
-	jr z,.skipblit
 	lddr
 	
 .skipblit:
@@ -236,9 +235,6 @@ drawMask:
 	mlt de 
 	add ix,de 
 	ld de,160
-	exx 
-	ld bc,10001000b
-	exx 
 .loop:
 	exx
 	ld a,(iy+3) 
@@ -247,34 +243,82 @@ drawMask:
 	or a,a 
 	sbc hl,hl 
 	ld l,a 
+	ex af,af' 
 	ld a,(iy+4) ; right edge 
 	sub a,l 
 	jr z,.point 
-	ld b,a
+	ld b,a ; b = count for loop 
+	
 	lea de,ix+0 ; get first pixel  
 	add hl,de 
-	ld a,(hl) 
-	or a,c
+	ld a,(hl)
+	ld c,(iy+5) ; b = lsb's 
+	srl c	 
+	jr nc,.fullleft  
+	or a,10000000b 
+	jr .skipleft 
+.fullleft: 
+	or a,10001000b
+.skipleft:
 	ld (hl),a 
-	inc hl
-.bloop: 
+	or a,a 
+	sbc hl,hl 
+	ld l,(iy+4)
+	add hl,de  ; get last pixel
+	ld a,(hl)
+	srl c ; draw rightmost pixel if even 
+	jr c,.fullright 
+	or a,00001000b 
+	jr .skipright 
+.fullright: 
+	or a,10001000b
+.skipright:
+	ld (hl),a
+	dec hl  
+	dec b 
+	jr z,.pointw
+	ld a,159 
+	cp a,b 
+	jr c,.skipblit 
+	ld d,10001000b 
+.fill: 
 	ld a,(hl) 
-	or a,c
+	or a,d 
 	ld (hl),a 
-	inc hl
-	djnz .bloop 
+	dec hl 
+	djnz .fill 
+
 .skipblit:
 	lea iy,iy+6
 	exx 
 	add ix,de
 	djnz .loop 
 	ret 
-.point: 
-	ex.sis hl,de
-	lea hl,ix+0 ; get first pixel  
+	
+.point:
+	lea de,ix+0 ; get first pixel  
 	add hl,de
-	ld a,(hl) 
-	or a,c
+	ld a,(iy+5)
+	ld c,a 
+	srl c 
+	and a,1
+	xor a,c 
+	jr nz,.pointw 
+	rr c 
+	jr nc,.even 
+.odd:
+	ld a,10000000b
+	or a,(hl) 
+	ld (hl),a 
+	jr .skipblit 
+.even: 
+	ld a,00001000b
+	or a,(hl) 
+	ld (hl),a 
+	jr .skipblit
+.pointw: 
+	ld a,10001000b 
+	or a,(hl) 
 	ld (hl),a 
 	jr .skipblit
 	
