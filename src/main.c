@@ -63,7 +63,7 @@ void getPlayerInput() {
 		vm.var[0xFC] = lr;
 		vm.var[0xFD] = mask; 
 		
-		if (kb_IsDown(kb_KeyAlpha)) // alpha = action button 
+		if (kb_IsDown(kb_KeyAlpha) || kb_IsDown(kb_Key2)) // alpha = action button 
 		{
 			action = 1; 
 			mask |= 0x80; 

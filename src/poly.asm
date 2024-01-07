@@ -215,7 +215,7 @@ _drawPolygon:
 ; ----------------------------------------------
 ; mesh type data structure. child poly's can be other hierarchies
 polyHierarchy: 
-	and a,$3F 
+;	and a,$3F 
 ;	cp a,2 
 ;	ret nz
 	ld a,(ix+1) ; x -= bbw*zoom

@@ -907,16 +907,14 @@ blitBuffer:
 waitVComp:
 	ld a,1000b
 	ld (ti.mpLcdIcr),a
-.loop: 	; wait until front porch to swap palette
+.loop: 	; wait until vsync to swap palette
 	ld a,(ti.mpLcdRis)
 	bit 3,a 
 	jr Z,.loop 
 	ret 
 	
 waitTimer:
-	or a,a 
-	sbc hl,hl 
-	ex de,hl 
+	ld de,0
 .loop: 
 	ld hl,(ti.mpTmr1Counter)
 	sbc hl,de 
