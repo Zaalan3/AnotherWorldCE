@@ -71,17 +71,30 @@ spiCmd:
 
 public spiInit
 public spiEnd
-
+public spiLock 
+public spiUnlock
 	
 ; changes refresh method to eliminate tearing
 spiInit: 
-	spi $C6,$04						; set scan speed   
-	spi $B2,$00,$78,$01,$11,$11 	; disable back porch 
+	spi $C6,$04						; set scan speed (TODO: experiment with larger(slower) intervals) 
+	spi $B2,$00,$78,$01 			; disable back porch 
 	spi $B0,$12,$F0					; enable VSync Interface
 	ret 
 	
 ; return SPI mode
 spiEnd:
 	spi $B0,$11,$F0					; go back to RGB interface
+	ret 
+	
+; disables sending data to SPI via LCD Controller
+spiLock: 					
+	spi $B0,$02 					; disable RGB interface 
+	spi $2C 						; reset RAM pointer 
+	ret 
+	
+; reenables LCD controller sending 
+; Run during Front Porch to avoid visual artifacts
+spiUnlock:
+	spi $B0,$12 
 	ret 
 	
