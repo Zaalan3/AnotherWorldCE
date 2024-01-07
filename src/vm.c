@@ -14,11 +14,13 @@
 #include "vm.h" 
 #include "text.h"
 
-extern uint24_t compressPage(uint8_t page); 
-extern void decompressVRAM(void *compressed); 
+
 
 void initAsm(); 
 void cleanupAsm();
+void backupVRAM();
+void loadVRAM();
+
 uint24_t executeThread(uint24_t pc);
 
 uint16_t recipTable[1024];
@@ -32,9 +34,12 @@ uint8_t currentPalette;
 uint8_t palettes[SIZEPAL];
 
 struct vmData vm; 
+
+// reserve space for savestate
 struct vmData vmBackup; 
 uint8_t palBackup;
-uint8_t vramBackup[160*200];
+uint8_t page0Backup[32000];	
+uint8_t page3Backup[32000];
 
 bool validSave;
 
@@ -207,40 +212,25 @@ void loadPart(uint8_t part) {
 
 
 void savestate(void) {
-	void *freeptr;
-	uint24_t freesize = os_MemChk(&freeptr);
-	
+
 	vmBackup = vm; 
 	palBackup = currentPalette;
 	
 	drawText(TEXT_SAVING,60);
-	for(uint8_t i = 0; i < 4; i++) { 
-		uint24_t length = compressPage(i); 
-		if(length > freesize) { 
-			validSave = false;
-			drawText(TEXT_SAVEFAILED,60); 
-			return; 
-		} 
-
-		if(i != 3) { 
-			memcpy(freeptr,&vramBackup,length); 
-			freeptr += length; 
-			freesize -= length;
-		}
-		
-	} 
+	
+	backupVRAM(); 
 	
 	drawText(TEXT_SAVESUCCESS,60); // savestate successful text 
+	
 	validSave = true; 
 } 
 
 void loadstate(void) {
-	void *freeptr; 
+	
 	if(validSave) { 
 		vm = vmBackup; 
 		currentPalette = palBackup; 
-		os_MemChk(&freeptr);
-		decompressVRAM(freeptr); 
+		loadVRAM(); 
 		
 		drawText(TEXT_LOADSUCCESS,60); 
 		return; 

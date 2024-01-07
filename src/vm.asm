@@ -4,6 +4,8 @@ section .text
 
 public _initAsm 
 public _cleanupAsm
+public _backupVRAM 
+public _loadVRAM
 
 define cemu 0
 
@@ -19,7 +21,7 @@ _initAsm:
 	
 	; set LCD timing 
 	
-	if cemu = 0 
+	if cemu = 0
 		ld hl,lcdTiming 
 		ld de,ti.mpLcdTiming0 
 		ld bc,8 
@@ -37,7 +39,8 @@ _cleanupAsm:
 	call spiEnd
 	ret 
 	
-
+;Timing = (1+1+1+(63+1)*16)*(74+1+1+157)*2*2 = 957164cc approx 50 fps
+; change 157 to 119 for closer to 60 fps
 lcdTiming: 
 	db	63 shl 2 
 	db	0 
@@ -46,6 +49,39 @@ lcdTiming:
 	dw	74 
 	db	0
 	db	157 
+	
+_backupVRAM: 
+	ld a,0 
+	call getBuffer
+	ld de,_page0Backup
+	ld bc,32000 
+	ldir 
+	ld a,3 
+	call getBuffer
+	ld de,_page3Backup
+	ld bc,32000 
+	ldir 
+	ret 
+	
+_loadVRAM: 
+	ld a,0 
+	call getBuffer
+	ex de,hl 
+	ld hl,_page0Backup
+	ld bc,32000 
+	ldir 
+	ld a,3 
+	call getBuffer
+	ex de,hl 
+	ld hl,_page3Backup
+	ld bc,32000 
+	ldir 
+	ret 
 
 extern spiInit
 extern spiEnd
+
+extern getBuffer
+extern _page0Backup
+extern _page3Backup
+
