@@ -24,7 +24,7 @@ void loadVRAM();
 uint24_t executeThread(uint24_t pc);
 
 uint16_t recipTable[1024];
-uint8_t edgeList[1440];
+uint8_t edgeList[4096];
 
 uint8_t* bytecodePtr; 
 uint8_t* poly1Ptr; 

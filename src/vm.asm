@@ -10,6 +10,9 @@ public _loadVRAM
 define cemu 0
 
 _initAsm: 
+	di 
+	xor a,a 
+	ld (ti.usbInited),a
 	; set bpp = 4
 	ld a,(ti.mpLcdCtrl) 
 	and a,11110001b ; mask out bpp
