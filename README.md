@@ -2,13 +2,15 @@
 
 Another World/Out of this World Interpreter for the TI-84 Plus CE. 
 
+Based upon [Fabother World](https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter).
+
 # Installing the game
 
 # How to Build
 
 This project was compiled with [The latest version of the CE Toolchain](https://github.com/CE-Programming/toolchain/releases).
 
-To convert the appvars needed to run this project, copy the contents of the *tools* folder to the folder for your copy of the DOS version of Another World/Out of This World, and run *convert.py* there. The appvars will be in the *out* subfolder.
+To convert the appvars needed to run this project, copy the contents of the *tools* folder to the folder for your copy of the DOS version of Another World where you see the files beginning with *bank*(bank00,bank0a,etc.), and run *convert.py* there. The appvars will be in the *out* subfolder.
 
 This Python script requires Python 3.9 or higher and that you either have the CE Toolchain installed, or that you copy [mateoconlechuga's convbin binary](https://github.com/mateoconlechuga/convbin/releases) to your Another World directory as well.
 
