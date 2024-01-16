@@ -47,8 +47,11 @@ mulZoom:
 	
 ; ----------------------------------------------	
 ;input: 
-; ix = polygon ptr 
+; ix = polygon ptr , iy = call data 
+; (ix+0) = type byte , (+1) = bbw , (+2) = bby, (+3) = #vert / #poly , (...) = vert/poly data 
 ; (iy+0) = color , (+1) = x , (+3) = y , (+5) = zoom
+
+
 _drawPolygon:
 	ld a,(ix+0)  ; type byte
 	cp a,$C0 
@@ -58,16 +61,7 @@ _drawPolygon:
 	and a,$3F 
 	ld (color),a 
 .fetchVerts: 
-	ld hl,(ix+1)  ; if bbw = 0,bbh = 1, and #verts = 4
-	ld de,$040100 ; draw a point
-	or a,a 
-	sbc hl,de
-	jp Z,drawPoint
-.copyVerts: 
-	add hl,de 
-	ld a,h	  
-	ex af,af' 
-	ld a,l 	; a = bounding box x
+	ld a,(ix+1)	  ; a = bounding box x 
 	call mulZoom  
 	ld (bbw),l 
 	srl h 
@@ -90,7 +84,7 @@ _drawPolygon:
 	ret nz 
 	
 
-	ex af,af' ; a = bounding box y 
+	ld a,(ix+2) ; a = bounding box y 
 	call mulZoom 
 	ld (bbh),l 
 	srl h 
@@ -226,7 +220,7 @@ polyHierarchy:
 	sbc hl,de 
 	ld (x),l 
 	ld (x+1),h 
-	ld a,(ix+2) ; y -= bbw h*zoom 
+	ld a,(ix+2) ; y -= bbh*zoom 
 	call mulZoom 
 	ex de,hl
 	ld hl,(y) 
@@ -238,7 +232,7 @@ polyHierarchy:
 	inc b 
 	lea ix,ix+4
 .loop:
-	ld a,(ix+2) 
+	ld a,(ix+2)  ; xn = x + bbw
 	call mulZoom 
 	ld de,(x) 
 	add hl,de 
@@ -253,7 +247,8 @@ polyHierarchy:
 	ld a,$FF
 	ld h,(ix+0) ; offset 
 	ld l,(ix+1) 
-	bit 7,h 
+	
+	bit 7,h 	; fetch new color if bit 15 of offset is set
 	jr Z,.recurse 
 	ld a,(ix+4) 
 	and a,$7F 
@@ -268,7 +263,7 @@ polyHierarchy:
 	push bc 
 	ld ix,(_polygonBase) 
 	add ix,de
-	lea iy,iy+8  ; data for polygon 
+	lea iy,colorn  ; data for polygon 
 	call _drawPolygon
 	pop bc 
 	pop iy 
