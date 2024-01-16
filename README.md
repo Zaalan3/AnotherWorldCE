@@ -8,7 +8,7 @@ Based upon [Fabother World](https://github.com/fabiensanglard/Another-World-Byte
 
 # How to Build
 
-This project was compiled with [The latest version of the CE Toolchain](https://github.com/CE-Programming/toolchain/releases).
+This project was compiled with [The latest version of the CE Toolchain](https://github.com/CE-Programming/toolchain/releases). Navigate to the topmost folder(where the makefile is) and run *make*.
 
 To convert the appvars needed to run this project, copy the contents of the *tools* folder to the folder for your copy of the DOS version of Another World where you see the files beginning with *bank*(bank00,bank0a,etc.), and run *convert.py* there. The appvars will be in the *out* subfolder.
 
