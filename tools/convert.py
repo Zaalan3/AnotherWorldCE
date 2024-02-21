@@ -1,8 +1,19 @@
 import subprocess
 import os
+from tkinter.filedialog import * 
+from tkinter.messagebox import *
+from tibundle import TIBundle
+
+
+dir = askdirectory(title = "Open folder with memlist.bin") 
 
 # read memlist and get nonaudio related files
-memlist = open('memlist.bin','rb')
+try: 
+	memlist = open(f'{dir}\\memlist.bin','rb')
+except:
+	showerror(message="memlist.bin not found in directory.") 
+	exit()
+
 mementry = []
 i = 0
 while(1):
@@ -154,12 +165,7 @@ def adjustPalettes(buffer):
         buffer[i+1] = (b<<2) + (g>>3)
     return buffer
 
-
-try: 
-	os.mkdir("out") 
-except Exception: 
-	pass
-
+bundle = TIBundle("AWVARS.b84")
 
 #iterate through list of entries and decompress and save to individual files
 for entry in mementry:
@@ -176,7 +182,7 @@ for entry in mementry:
 
     print(f'Fetching entry {index}...')
 
-    bankfile = open(f'bank0{bank:x}','rb')
+    bankfile = open(f'{dir}\\bank0{bank:x}','rb')
 
     bankfile.seek(entry['offset'])
     buffer = bytearray(bankfile.read(packedSize))
@@ -194,14 +200,20 @@ for entry in mementry:
     print(f'Size: {len(buffer)}')
 
     entryname = f'AW{index:X}'
-    with open('out\\' + entryname + '.bin','wb') as f:
+    with open('temp.bin','wb') as f:
         f.write(buffer)
 
     if (entry['type'] == 2 or entry['type'] == 3):
         flags = '-c zx7'
 
-    subprocess.run(f'convbin {flags} -j bin -i out\\{entryname}.bin  -k 8xv -r -o out\\{entryname}.8xv -n {entryname}', shell = True)
-    os.remove(f"out\\{entryname}.bin")
+    subprocess.run(f'convbin {flags} -j bin -i temp.bin -k 8xv -r -o temp.8xv -n {entryname}', shell = True)
+    
+    bundle.addFile('temp.8xv',f'{entryname}.8xv')
 
 
-print('Done!')
+
+bundle.writeChecksum()
+bundle.close()
+os.remove(f"temp.bin")
+os.remove(f"temp.8xv")
+showinfo(message="Conversion successful!\nUnzip AWVARS.b84 for individual files.")
