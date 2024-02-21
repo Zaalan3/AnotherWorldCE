@@ -19,6 +19,19 @@ Otherwise, do the following:
 4. Select ANOTHERW 
 5. Press [enter] 
 
+# Controls
+
+Action => [Alpha]
+Jump => [2nd] or [Up] 
+Crouch => [Down] 
+Move => [Left] and [Right]
+
+Open Password Menu => [F3] 
+Save State => [F5] 
+Load State => [F4] 
+
+Exit Game => [Del]
+
 # How to Build
 
 This project was compiled with [The latest version of the CE Toolchain](https://github.com/CE-Programming/toolchain/releases). Navigate to the topmost folder(where the makefile is) and run *make*.
