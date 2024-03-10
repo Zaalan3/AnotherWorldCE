@@ -76,8 +76,8 @@ public spiUnlock
 	
 ; changes refresh method to eliminate tearing
 spiInit: 
-	spi $C6,$04						; set scan speed (TODO: experiment with larger(slower) intervals) 
-	spi $B2,$00,$78,$01 			; disable back porch 
+	spi $C6,$08						; set scan speed 
+	spi $B2,$01 					; reduce back porch 
 	spi $B0,$12,$F0					; enable VSync Interface
 	ret 
 	

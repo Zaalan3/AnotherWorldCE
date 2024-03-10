@@ -42,16 +42,17 @@ _cleanupAsm:
 	call spiEnd
 	ret 
 	
+; Timing = (HSW+HFP+HBP+16*(PPL+1)) * (LPP+1+VSW+1+VFP+VBP)
 ;Timing = (1+1+1+(63+1)*16)*(74+1+1+157)*2*2 = 957164cc approx 50 fps
 ; change 157 to 119 for closer to 60 fps
 lcdTiming: 
-	db	63 shl 2 
-	db	0 
-	db	0 
-	db	0 
-	dw	74 
-	db	0
-	db	157 
+	db	63 shl 2 	; PPL 
+	db	0 			; HSW
+	db	0 			; HFP 
+	db	0 			; HBP 
+	dw	74 			; LPP & VSW(0) 
+	db	0			; VFP
+	db	157 		; VBP
 	
 _backupVRAM: 
 	ld a,0 
