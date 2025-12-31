@@ -1,5 +1,11 @@
 # AnotherWorldCE
 
+## Note
+This is almost identical to AnotherWorldCE by Zaalan3, but with pixel rendering improved (some early returns in the pixel plotting function were removed.)
+This should fix some of the password screen's text not appearing properly and any general effects only rendering with single pixels.
+If you encounter any bugs as a result of this please let me know (though I haven't encountered any yet.)
+
+
 Another World/Out of this World Interpreter for the TI-84 Plus CE. 
 
 Based upon [Fabother World](https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter).
