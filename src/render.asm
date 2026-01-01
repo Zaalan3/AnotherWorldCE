@@ -19,19 +19,19 @@ yend equ iy+7
 
 drawPoint:
 	ld hl,(x) ; get pixel address
-	bit 7,h 
-	ret nz
+	;bit 7,h 
+	;ret nz
 	srl h 
 	rr l 
 	rl b
 	ld de,160 
 	or a,a 
 	sbc.sis hl,de 
-	ret nc
+	;ret nc
 	add hl,de 
 	ld a,(y) 
-	bit 7,a  
-	ret nz 	
+	;bit 7,a  
+	;ret nz 	
 	cp a,199
 	ret nc 
 	ld d,a
